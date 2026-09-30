@@ -1,0 +1,582 @@
+============================= test session starts ==============================
+platform linux -- Python 3.14.7, pytest-9.0.3, pluggy-1.6.0 -- /sbin/python
+cachedir: .pytest_cache
+rootdir: /mnt/18T/MIO/Proyectos/ha-energy-optimizer
+configfile: pytest.ini
+collecting ... collected 373 items
+
+tests/execution/test_cycle.py::TestSmoke::test_runs_end_to_end PASSED    [  0%]
+tests/execution/test_cycle.py::TestSmoke::test_naive_now_rejected PASSED [  0%]
+tests/execution/test_cycle.py::TestBehaviour::test_cycle_emits_commands_when_planner_says_on PASSED [  0%]
+tests/execution/test_cycle.py::TestBehaviour::test_cycle_off_load_in_off_world_no_commands PASSED [  1%]
+tests/execution/test_cycle.py::TestBehaviour::test_new_state_persistable PASSED [  1%]
+tests/execution/test_cycle.py::TestBehaviour::test_alerts_collected_from_planner_and_policy PASSED [  1%]
+tests/execution/test_engine.py::TestBuildPlan::test_emits_turn_on_when_off_in_world PASSED [  1%]
+tests/execution/test_engine.py::TestBuildPlan::test_emits_turn_off_when_on_in_world PASSED [  2%]
+tests/execution/test_engine.py::TestBuildPlan::test_no_command_when_already_in_desired_state PASSED [  2%]
+tests/execution/test_engine.py::TestBuildPlan::test_only_slot_0_considered PASSED [  2%]
+tests/execution/test_engine.py::TestBuildPlan::test_unbound_loads_silently_skipped PASSED [  2%]
+tests/execution/test_engine.py::TestExecute::test_acks_recorded_per_command PASSED [  3%]
+tests/execution/test_engine.py::TestExecute::test_failed_callback_recorded_as_not_acknowledged PASSED [  3%]
+tests/execution/test_engine.py::TestExecute::test_exceptions_in_callback_caught PASSED [  3%]
+tests/execution/test_engine.py::TestExecute::test_loads_now_on_lists_acked_ons PASSED [  4%]
+tests/execution/test_reconciliation.py::TestWorldState::test_naive_now_raises PASSED [  4%]
+tests/execution/test_reconciliation.py::TestWorldState::test_empty_returns_empty PASSED [  4%]
+tests/execution/test_reconciliation.py::TestWorldState::test_loads_on_filtered PASSED [  4%]
+tests/execution/test_reconciliation.py::TestWorldState::test_callback_exception_treated_as_off PASSED [  5%]
+tests/execution/test_reconciliation.py::TestLoadDebt::test_rebuilds_history_per_load PASSED [  5%]
+tests/execution/test_reconciliation.py::TestLoadDebt::test_clips_to_window PASSED [  5%]
+tests/execution/test_reconciliation.py::TestLoadDebt::test_negative_entries_clamped_to_zero PASSED [  5%]
+tests/execution/test_reconciliation.py::TestLoadDebt::test_callback_exception_yields_empty PASSED [  6%]
+tests/execution/test_reconciliation.py::TestLoadDebt::test_zero_window_raises PASSED [  6%]
+tests/forecasters/test_atmospheric_factor.py::TestWeatherToInt::test_known_conditions_round_trip PASSED [  6%]
+tests/forecasters/test_atmospheric_factor.py::TestWeatherToInt::test_unknown_string_falls_back_to_unknown PASSED [  6%]
+tests/forecasters/test_atmospheric_factor.py::TestWeatherToInt::test_none_returns_unknown_code PASSED [  7%]
+tests/forecasters/test_atmospheric_factor.py::TestWeatherToInt::test_empty_string_returns_unknown_code PASSED [  7%]
+tests/forecasters/test_atmospheric_factor.py::TestWeatherToInt::test_case_insensitive PASSED [  7%]
+tests/forecasters/test_atmospheric_factor.py::TestWeatherToInt::test_sunny_is_lower_code_than_cloudy PASSED [  8%]
+tests/forecasters/test_atmospheric_factor.py::TestMakeFeatures::test_returns_dataclass PASSED [  8%]
+tests/forecasters/test_atmospheric_factor.py::TestMakeFeatures::test_yield_history_mean_and_std PASSED [  8%]
+tests/forecasters/test_atmospheric_factor.py::TestMakeFeatures::test_empty_history_uses_uninformative_prior PASSED [  8%]
+tests/forecasters/test_atmospheric_factor.py::TestMakeFeatures::test_none_history_uses_uninformative_prior PASSED [  9%]
+tests/forecasters/test_atmospheric_factor.py::TestMakeFeatures::test_single_sample_history_uses_default_std PASSED [  9%]
+tests/forecasters/test_atmospheric_factor.py::TestMakeFeatures::test_to_array_shape_matches_feature_names PASSED [  9%]
+tests/forecasters/test_atmospheric_factor.py::TestModelContract::test_constructor_rejects_invalid_quantiles PASSED [  9%]
+tests/forecasters/test_atmospheric_factor.py::TestModelContract::test_quantiles_get_sorted PASSED [ 10%]
+tests/forecasters/test_atmospheric_factor.py::TestModelContract::test_quantile_names PASSED [ 10%]
+tests/forecasters/test_atmospheric_factor.py::TestModelContract::test_fitted_property PASSED [ 10%]
+tests/forecasters/test_atmospheric_factor.py::TestModelContract::test_predict_before_fit_raises PASSED [ 10%]
+tests/forecasters/test_atmospheric_factor.py::TestModelContract::test_fit_rejects_wrong_feature_count PASSED [ 11%]
+tests/forecasters/test_atmospheric_factor.py::TestModelContract::test_fit_rejects_1d_X PASSED [ 11%]
+tests/forecasters/test_atmospheric_factor.py::TestModelContract::test_fit_rejects_mismatched_y_length PASSED [ 11%]
+tests/forecasters/test_atmospheric_factor.py::TestModelContract::test_predict_shape PASSED [ 12%]
+tests/forecasters/test_atmospheric_factor.py::TestModelContract::test_predict_clipped_to_physical_range PASSED [ 12%]
+tests/forecasters/test_atmospheric_factor.py::TestModelContract::test_predict_quantile_ordering_enforced PASSED [ 12%]
+tests/forecasters/test_atmospheric_factor.py::TestModelContract::test_predict_one_returns_scalars PASSED [ 12%]
+tests/forecasters/test_atmospheric_factor.py::TestSyntheticLearning::test_learns_negative_cloud_effect PASSED [ 13%]
+tests/forecasters/test_atmospheric_factor.py::TestSyntheticLearning::test_p90_above_p10 PASSED [ 13%]
+tests/forecasters/test_atmospheric_factor.py::TestPersistence::test_round_trip PASSED [ 13%]
+tests/forecasters/test_atmospheric_factor.py::TestPersistence::test_load_rejects_schema_mismatch PASSED [ 13%]
+tests/forecasters/test_clear_sky.py::TestSolarPosition::test_naive_datetime_raises PASSED [ 14%]
+tests/forecasters/test_clear_sky.py::TestSolarPosition::test_sun_high_at_summer_noon_north_hemisphere PASSED [ 14%]
+tests/forecasters/test_clear_sky.py::TestSolarPosition::test_sun_below_horizon_at_midnight PASSED [ 14%]
+tests/forecasters/test_clear_sky.py::TestSolarPosition::test_declination_extremes PASSED [ 15%]
+tests/forecasters/test_clear_sky.py::TestSolarPosition::test_morning_east_afternoon_west PASSED [ 15%]
+tests/forecasters/test_clear_sky.py::TestClearSkyModel::test_zero_irradiance_at_night PASSED [ 15%]
+tests/forecasters/test_clear_sky.py::TestClearSkyModel::test_irradiance_peak_around_noon PASSED [ 15%]
+tests/forecasters/test_clear_sky.py::TestClearSkyModel::test_power_scales_linearly_with_capacity PASSED [ 16%]
+tests/forecasters/test_clear_sky.py::TestClearSkyModel::test_summer_day_beats_winter_day_at_midlatitude PASSED [ 16%]
+tests/forecasters/test_clear_sky.py::TestClearSkyModel::test_south_facing_beats_north_facing_in_northern_hemisphere PASSED [ 16%]
+tests/forecasters/test_clear_sky.py::TestClearSkyModel::test_default_tilt_equals_latitude PASSED [ 16%]
+tests/forecasters/test_clear_sky.py::TestClearSkyModel::test_explicit_tilt_used_when_set PASSED [ 17%]
+tests/forecasters/test_clear_sky.py::TestClearSkyModel::test_efficiency_factor_applied PASSED [ 17%]
+tests/forecasters/test_clear_sky.py::TestEnergyIntegration::test_kwh_for_hour_is_non_negative PASSED [ 17%]
+tests/forecasters/test_clear_sky.py::TestEnergyIntegration::test_kwh_for_night_hour_is_zero PASSED [ 17%]
+tests/forecasters/test_clear_sky.py::TestEnergyIntegration::test_daily_kwh_sane_for_5kwp_summer_solstice PASSED [ 18%]
+tests/forecasters/test_clear_sky.py::TestEnergyIntegration::test_daily_kwh_lower_in_winter PASSED [ 18%]
+tests/forecasters/test_clear_sky.py::TestEnergyIntegration::test_kwh_series_naive_datetimes_raise PASSED [ 18%]
+tests/forecasters/test_clear_sky.py::TestEnergyIntegration::test_kwh_series_aligned_to_hour_boundaries PASSED [ 19%]
+tests/forecasters/test_clear_sky.py::TestEnergyIntegration::test_kwh_for_hour_invalid_samples_raises PASSED [ 19%]
+tests/forecasters/test_clear_sky.py::TestConstants::test_solar_constant_in_expected_range PASSED [ 19%]
+tests/forecasters/test_clear_sky.py::TestConstants::test_attenuation_and_diffuse_fractions_sane PASSED [ 19%]
+tests/forecasters/test_house_forecaster.py::TestMakeFeatures::test_saturday_is_weekend PASSED [ 20%]
+tests/forecasters/test_house_forecaster.py::TestMakeFeatures::test_monday_is_not_weekend PASSED [ 20%]
+tests/forecasters/test_house_forecaster.py::TestMakeFeatures::test_to_array_shape_matches_feature_names PASSED [ 20%]
+tests/forecasters/test_house_forecaster.py::TestMakeFeatures::test_defaults_for_loads PASSED [ 20%]
+tests/forecasters/test_house_forecaster.py::TestModelContract::test_constructor_rejects_invalid_quantiles PASSED [ 21%]
+tests/forecasters/test_house_forecaster.py::TestModelContract::test_constructor_rejects_non_positive_cap PASSED [ 21%]
+tests/forecasters/test_house_forecaster.py::TestModelContract::test_quantiles_sorted PASSED [ 21%]
+tests/forecasters/test_house_forecaster.py::TestModelContract::test_fitted_false_then_true PASSED [ 21%]
+tests/forecasters/test_house_forecaster.py::TestModelContract::test_predict_before_fit_raises PASSED [ 22%]
+tests/forecasters/test_house_forecaster.py::TestModelContract::test_fit_rejects_wrong_feature_count PASSED [ 22%]
+tests/forecasters/test_house_forecaster.py::TestModelContract::test_fit_rejects_mismatched_y_length PASSED [ 22%]
+tests/forecasters/test_house_forecaster.py::TestModelContract::test_predict_shape PASSED [ 23%]
+tests/forecasters/test_house_forecaster.py::TestModelContract::test_predict_quantile_ordering PASSED [ 23%]
+tests/forecasters/test_house_forecaster.py::TestModelContract::test_predict_non_negative PASSED [ 23%]
+tests/forecasters/test_house_forecaster.py::TestModelContract::test_predict_clipped_to_cap PASSED [ 23%]
+tests/forecasters/test_house_forecaster.py::TestModelContract::test_predict_one_returns_scalars PASSED [ 24%]
+tests/forecasters/test_house_forecaster.py::TestSyntheticLearning::test_evening_higher_than_night PASSED [ 24%]
+tests/forecasters/test_house_forecaster.py::TestSyntheticLearning::test_more_planned_loads_means_higher_prediction PASSED [ 24%]
+tests/forecasters/test_house_forecaster.py::TestPersistence::test_round_trip PASSED [ 24%]
+tests/forecasters/test_house_forecaster.py::TestPersistence::test_load_rejects_schema_mismatch PASSED [ 25%]
+tests/forecasters/test_house_forecaster.py::TestPersistence::test_load_preserves_cap PASSED [ 25%]
+tests/forecasters/test_house_forecaster.py::TestConstants::test_default_quantiles PASSED [ 25%]
+tests/forecasters/test_house_forecaster.py::TestConstants::test_cap_constant_sane PASSED [ 26%]
+tests/forecasters/test_quality.py::TestRecording::test_naive_ts_raises PASSED [ 26%]
+tests/forecasters/test_quality.py::TestRecording::test_nan_observations_silently_dropped PASSED [ 26%]
+tests/forecasters/test_quality.py::TestRecording::test_series_names_tracked PASSED [ 26%]
+tests/forecasters/test_quality.py::TestRecording::test_has_series PASSED [ 27%]
+tests/forecasters/test_quality.py::TestStats::test_empty_series_returns_nan_with_zero_samples PASSED [ 27%]
+tests/forecasters/test_quality.py::TestStats::test_mae_bias_rmse_known_pattern PASSED [ 27%]
+tests/forecasters/test_quality.py::TestStats::test_positive_bias_when_over_predicting PASSED [ 27%]
+tests/forecasters/test_quality.py::TestStats::test_window_hours_respected PASSED [ 28%]
+tests/forecasters/test_quality.py::TestCalibration::test_perfectly_calibrated_p50 PASSED [ 28%]
+tests/forecasters/test_quality.py::TestCalibration::test_over_predicting_p10_has_high_coverage PASSED [ 28%]
+tests/forecasters/test_quality.py::TestCalibration::test_target_quantile_preserved_in_stats PASSED [ 28%]
+tests/forecasters/test_quality.py::TestCalibration::test_no_target_quantile_means_no_calibration PASSED [ 29%]
+tests/forecasters/test_quality.py::TestRetention::test_old_entries_pruned_on_insert PASSED [ 29%]
+tests/forecasters/test_quality.py::TestRetention::test_retention_zero_rejected PASSED [ 29%]
+tests/forecasters/test_quality.py::TestMultipleSeries::test_stats_per_series_independent PASSED [ 30%]
+tests/forecasters/test_quality.py::TestMultipleSeries::test_stats_all_returns_dict PASSED [ 30%]
+tests/forecasters/test_quality.py::TestPersistence::test_round_trip_in_memory PASSED [ 30%]
+tests/forecasters/test_quality.py::TestPersistence::test_save_load_round_trip PASSED [ 30%]
+tests/forecasters/test_quality.py::TestPersistence::test_load_nonexistent_returns_empty PASSED [ 31%]
+tests/forecasters/test_quality.py::TestPersistence::test_save_is_atomic_no_partial_on_disk PASSED [ 31%]
+tests/forecasters/test_quality.py::TestPersistence::test_save_creates_parent_dir PASSED [ 31%]
+tests/forecasters/test_quality.py::TestPersistence::test_naive_iso_string_normalised_to_utc PASSED [ 31%]
+tests/forecasters/test_solar_forecaster.py::TestContract::test_naive_start_raises PASSED [ 32%]
+tests/forecasters/test_solar_forecaster.py::TestContract::test_zero_horizon_raises PASSED [ 32%]
+tests/forecasters/test_solar_forecaster.py::TestContract::test_negative_horizon_raises PASSED [ 32%]
+tests/forecasters/test_solar_forecaster.py::TestContract::test_unfitted_atmospheric_model_raises PASSED [ 32%]
+tests/forecasters/test_solar_forecaster.py::TestContract::test_horizon_length PASSED [ 33%]
+tests/forecasters/test_solar_forecaster.py::TestContract::test_start_is_snapped_to_top_of_hour PASSED [ 33%]
+tests/forecasters/test_solar_forecaster.py::TestPhysicalConstraints::test_night_hours_are_zero_across_all_quantiles PASSED [ 33%]
+tests/forecasters/test_solar_forecaster.py::TestPhysicalConstraints::test_daytime_hours_have_positive_kwh PASSED [ 34%]
+tests/forecasters/test_solar_forecaster.py::TestPhysicalConstraints::test_quantile_ordering_per_hour PASSED [ 34%]
+tests/forecasters/test_solar_forecaster.py::TestPhysicalConstraints::test_p90_never_exceeds_capacity_times_factor_cap PASSED [ 34%]
+tests/forecasters/test_solar_forecaster.py::TestPhysicalConstraints::test_higher_capacity_produces_more PASSED [ 34%]
+tests/forecasters/test_solar_forecaster.py::TestFeatureProvider::test_provider_is_called_for_every_hour PASSED [ 35%]
+tests/forecasters/test_solar_forecaster.py::TestFeatureProvider::test_cloudy_provider_lowers_kwh_vs_sunny_provider PASSED [ 35%]
+tests/forecasters/test_solar_forecaster.py::TestHelpers::test_hour_forecast_to_dict PASSED [ 35%]
+tests/forecasters/test_solar_forecaster.py::TestHelpers::test_total_kwh_aggregates PASSED [ 35%]
+tests/forecasters/test_training.py::TestComputeAtmosphericFactor::test_normal_ratio PASSED [ 36%]
+tests/forecasters/test_training.py::TestComputeAtmosphericFactor::test_clipped_to_zero_at_night PASSED [ 36%]
+tests/forecasters/test_training.py::TestComputeAtmosphericFactor::test_clipped_to_max_1_1 PASSED [ 36%]
+tests/forecasters/test_training.py::TestComputeAtmosphericFactor::test_clipped_to_min_zero_on_negative_input PASSED [ 36%]
+tests/forecasters/test_training.py::TestTrainAtmospheric::test_basic_training_returns_fitted_model_and_report PASSED [ 37%]
+tests/forecasters/test_training.py::TestTrainAtmospheric::test_rejects_too_few_samples PASSED [ 37%]
+tests/forecasters/test_training.py::TestTrainAtmospheric::test_custom_min_samples_threshold PASSED [ 37%]
+tests/forecasters/test_training.py::TestTrainAtmospheric::test_inf_and_nan_samples_dropped PASSED [ 38%]
+tests/forecasters/test_training.py::TestTrainAtmospheric::test_p50_prediction_close_to_actual_for_clear_signal PASSED [ 38%]
+tests/forecasters/test_training.py::TestTrainHouse::test_basic_training PASSED [ 38%]
+tests/forecasters/test_training.py::TestTrainHouse::test_rejects_too_few_samples PASSED [ 38%]
+tests/forecasters/test_training.py::TestTrainHouse::test_custom_kwh_cap PASSED [ 39%]
+tests/forecasters/test_training.py::TestTrainHouse::test_custom_min_samples_threshold PASSED [ 39%]
+tests/forecasters/test_training.py::TestReportSerialisation::test_to_dict PASSED [ 39%]
+tests/forecasters/test_training.py::TestConstants::test_min_train_samples_sane PASSED [ 39%]
+tests/planner/test_decision_matrix.py::test_row1_debt_ok_returns_off PASSED [ 40%]
+tests/planner/test_decision_matrix.py::test_row2_surplus_now_turns_on_even_when_mid PASSED [ 40%]
+tests/planner/test_decision_matrix.py::test_row2_surplus_in_peak_is_overridden_by_peak_ban PASSED [ 40%]
+tests/planner/test_decision_matrix.py::test_row3_critical_in_valley_forces_on PASSED [ 41%]
+tests/planner/test_decision_matrix.py::test_row3_critical_in_mid_forces_on PASSED [ 41%]
+tests/planner/test_decision_matrix.py::test_row4_critical_in_peak_blocks_with_alert PASSED [ 41%]
+tests/planner/test_decision_matrix.py::test_row4_critical_in_peak_with_override_runs_with_alert PASSED [ 41%]
+tests/planner/test_decision_matrix.py::test_row4_irreachable_in_peak_also_blocks_with_alert PASSED [ 42%]
+tests/planner/test_decision_matrix.py::test_row5_peak_non_critical_off PASSED [ 42%]
+tests/planner/test_decision_matrix.py::test_row6_valley_high_prob_tomorrow_defers PASSED [ 42%]
+tests/planner/test_decision_matrix.py::test_row7_valley_low_prob_high_debt_on PASSED [ 42%]
+tests/planner/test_decision_matrix.py::test_row8_valley_low_prob_medium_debt_min_runtime PASSED [ 43%]
+tests/planner/test_decision_matrix.py::test_row9_valley_low_prob_low_debt_off PASSED [ 43%]
+tests/planner/test_decision_matrix.py::test_row10_mid_high_prob_next_valley_defers PASSED [ 43%]
+tests/planner/test_decision_matrix.py::test_row11_mid_no_valley_high_debt_on PASSED [ 43%]
+tests/planner/test_decision_matrix.py::test_unknown_period_defaults_to_off PASSED [ 44%]
+tests/planner/test_iterative.py::TestConvergence::test_stable_context_converges_in_2_iterations PASSED [ 44%]
+tests/planner/test_iterative.py::TestConvergence::test_empty_loads_returns_empty_plan PASSED [ 44%]
+tests/planner/test_iterative.py::TestConvergence::test_max_iter_validation PASSED [ 45%]
+tests/planner/test_iterative.py::TestOscillation::test_oscillating_context_detected PASSED [ 45%]
+tests/planner/test_iterative.py::TestMaxIterGuardrail::test_monstruo_del_bucle_caps_iterations PASSED [ 45%]
+tests/planner/test_iterative.py::TestForcedStates::test_forced_off_bypasses_decision_matrix PASSED [ 45%]
+tests/planner/test_iterative.py::TestForcedStates::test_forced_on_bypasses_off_decision PASSED [ 46%]
+tests/planner/test_iterative.py::TestForcedStates::test_only_targeted_slot_forced PASSED [ 46%]
+tests/planner/test_iterative.py::TestAlerts::test_critical_peak_alert_collected PASSED [ 46%]
+tests/planner/test_iterative.py::TestResultHelpers::test_to_dict_serialises_summary PASSED [ 46%]
+tests/planner/test_iterative.py::TestResultHelpers::test_cells_for_load_filters PASSED [ 47%]
+tests/planner/test_iterative.py::TestSpecConstants::test_max_iterations_matches_spec PASSED [ 47%]
+tests/planner/test_load_quota.py::TestConfigValidation::test_rejects_negative_target PASSED [ 47%]
+tests/planner/test_load_quota.py::TestConfigValidation::test_rejects_zero_window PASSED [ 47%]
+tests/planner/test_load_quota.py::TestConfigValidation::test_rejects_non_positive_min_runtime PASSED [ 48%]
+tests/planner/test_load_quota.py::TestConfigValidation::test_rejects_daily_max_outside_24h PASSED [ 48%]
+tests/planner/test_load_quota.py::TestConfigValidation::test_rejects_invalid_confidence_pct PASSED [ 48%]
+tests/planner/test_load_quota.py::TestDebtClassification::test_quota_met_means_ok PASSED [ 49%]
+tests/planner/test_load_quota.py::TestDebtClassification::test_early_in_window_with_progress_is_low PASSED [ 49%]
+tests/planner/test_load_quota.py::TestDebtClassification::test_halfway_unexecuted_is_medium PASSED [ 49%]
+tests/planner/test_load_quota.py::TestDebtClassification::test_critical_when_days_left_le_1 PASSED [ 49%]
+tests/planner/test_load_quota.py::TestDebtClassification::test_irreachable_when_target_exceeds_remaining_capacity PASSED [ 50%]
+tests/planner/test_load_quota.py::TestBugB1WindowMutation::test_truncates_history_to_current_window PASSED [ 50%]
+tests/planner/test_load_quota.py::TestBugB2DataQualityScaling::test_target_scales_with_telemetry_coverage PASSED [ 50%]
+tests/planner/test_load_quota.py::TestBugB2DataQualityScaling::test_full_telemetry_means_no_scaling PASSED [ 50%]
+tests/planner/test_load_quota.py::TestBugB2DataQualityScaling::test_default_days_with_telemetry_is_window_days PASSED [ 51%]
+tests/planner/test_load_quota.py::TestBugB2DataQualityScaling::test_days_with_telemetry_clamped PASSED [ 51%]
+tests/planner/test_load_quota.py::TestRobustness::test_days_passed_clamped_to_window PASSED [ 51%]
+tests/planner/test_load_quota.py::TestRobustness::test_negative_days_passed_raises PASSED [ 52%]
+tests/planner/test_load_quota.py::TestRobustness::test_negative_history_entries_treated_as_zero PASSED [ 52%]
+tests/planner/test_load_quota.py::TestRobustness::test_to_dict_roundtrip PASSED [ 52%]
+tests/planner/test_utility_score.py::TestMonotonicity::test_higher_debt_higher_score PASSED [ 52%]
+tests/planner/test_utility_score.py::TestMonotonicity::test_valley_beats_peak_for_same_debt PASSED [ 53%]
+tests/planner/test_utility_score.py::TestMonotonicity::test_higher_prob_surplus_lowers_score_for_non_critical PASSED [ 53%]
+tests/planner/test_utility_score.py::TestMonotonicity::test_critical_score_does_not_drop_with_high_prob_surplus PASSED [ 53%]
+tests/planner/test_utility_score.py::TestMonotonicity::test_irreachable_score_does_not_drop_with_high_prob_surplus PASSED [ 53%]
+tests/planner/test_utility_score.py::TestBounds::test_ok_in_peak_is_lowest PASSED [ 54%]
+tests/planner/test_utility_score.py::TestBounds::test_critical_in_valley_is_highest PASSED [ 54%]
+tests/planner/test_utility_score.py::TestCustomWeights::test_custom_weights_override PASSED [ 54%]
+tests/planner/test_utility_score.py::TestCustomWeights::test_unknown_period_defaults_to_zero PASSED [ 54%]
+tests/policy/test_antiflap.py::TestValidation::test_naive_now_raises PASSED [ 55%]
+tests/policy/test_antiflap.py::TestValidation::test_negative_hold_rejected PASSED [ 55%]
+tests/policy/test_antiflap.py::TestBehaviour::test_first_run_no_prior_state_passes_through PASSED [ 55%]
+tests/policy/test_antiflap.py::TestBehaviour::test_same_action_as_prior_passes_through PASSED [ 56%]
+tests/policy/test_antiflap.py::TestBehaviour::test_change_within_hold_blocked PASSED [ 56%]
+tests/policy/test_antiflap.py::TestBehaviour::test_change_after_hold_allowed PASSED [ 56%]
+tests/policy/test_antiflap.py::TestBehaviour::test_only_slot_0_affected PASSED [ 56%]
+tests/policy/test_antiflap.py::TestBehaviour::test_naive_last_change_ts_normalised PASSED [ 57%]
+tests/policy/test_capacity_budget.py::TestBasic::test_no_overrides_when_under_budget PASSED [ 57%]
+tests/policy/test_capacity_budget.py::TestBasic::test_empty_plan_returns_empty PASSED [ 57%]
+tests/policy/test_capacity_budget.py::TestBasic::test_no_on_cells_no_overrides PASSED [ 57%]
+tests/policy/test_capacity_budget.py::TestOverload::test_lowest_utility_dropped_first PASSED [ 58%]
+tests/policy/test_capacity_budget.py::TestOverload::test_tie_breaks_by_higher_load_watts PASSED [ 58%]
+tests/policy/test_capacity_budget.py::TestOverload::test_each_slot_budgeted_independently PASSED [ 58%]
+tests/policy/test_capacity_budget.py::TestSabadoDeGloria::test_pool_and_termo_collision_serialised PASSED [ 58%]
+tests/policy/test_capacity_budget.py::TestValidation::test_negative_budget_raises PASSED [ 59%]
+tests/policy/test_capacity_budget.py::TestValidation::test_missing_load_watts_treated_as_zero PASSED [ 59%]
+tests/policy/test_degraded_mode.py::TestClassification::test_all_normal_returns_normal PASSED [ 59%]
+tests/policy/test_degraded_mode.py::TestClassification::test_sensor_age_dominant PASSED [ 60%]
+tests/policy/test_degraded_mode.py::TestClassification::test_aemet_dominant_over_forecast PASSED [ 60%]
+tests/policy/test_degraded_mode.py::TestClassification::test_forecast_alone PASSED [ 60%]
+tests/policy/test_degraded_mode.py::TestClassification::test_at_threshold_not_triggered PASSED [ 60%]
+tests/policy/test_degraded_mode.py::TestConfigValidation::test_invalid_thresholds_rejected PASSED [ 61%]
+tests/policy/test_degraded_mode.py::TestLevel1::test_min_runtime_only_decisions_dropped PASSED [ 61%]
+tests/policy/test_degraded_mode.py::TestLevel1::test_off_cells_unchanged_in_l1 PASSED [ 61%]
+tests/policy/test_degraded_mode.py::TestLevel2::test_all_non_critical_dropped PASSED [ 61%]
+tests/policy/test_degraded_mode.py::TestLevel3::test_all_loads_forced_off PASSED [ 62%]
+tests/policy/test_degraded_mode.py::TestNormal::test_no_overrides_when_normal PASSED [ 62%]
+tests/policy/test_peak_prohibition.py::test_peak_on_load_forced_off PASSED [ 62%]
+tests/policy/test_peak_prohibition.py::test_off_loads_unchanged PASSED   [ 63%]
+tests/policy/test_peak_prohibition.py::test_valley_and_mid_untouched PASSED [ 63%]
+tests/policy/test_peak_prohibition.py::test_rule_4_exception_passes_through PASSED [ 63%]
+tests/policy/test_peak_prohibition.py::test_unknown_slot_period_treated_as_non_peak PASSED [ 63%]
+tests/policy/test_pipeline.py::TestHappyPath::test_pipeline_passes_clean_plan_unchanged PASSED [ 64%]
+tests/policy/test_pipeline.py::TestComposition::test_capacity_then_peak_then_antiflap_then_degraded PASSED [ 64%]
+tests/policy/test_pipeline.py::TestComposition::test_degraded_l3_overrides_everything PASSED [ 64%]
+tests/policy/test_pipeline.py::TestComposition::test_peak_prohibition_after_capacity_budget PASSED [ 64%]
+tests/policy/test_pipeline.py::TestComposition::test_antiflap_blocks_recent_change PASSED [ 65%]
+tests/policy/test_pipeline.py::TestSummary::test_to_dict_serialisable PASSED [ 65%]
+tests/scenario/test_scenario_builder.py::TestDebtMapping::test_ok_low_medium_map_to_median PASSED [ 65%]
+tests/scenario/test_scenario_builder.py::TestDebtMapping::test_high_critical_irreachable_map_to_conservative PASSED [ 65%]
+tests/scenario/test_scenario_builder.py::TestQuantilePicking::test_median_uses_p50 PASSED [ 66%]
+tests/scenario/test_scenario_builder.py::TestQuantilePicking::test_conservative_uses_p10_solar_p90_house PASSED [ 66%]
+tests/scenario/test_scenario_builder.py::TestQuantilePicking::test_optimistic_uses_p90_solar_p10_house PASSED [ 66%]
+tests/scenario/test_scenario_builder.py::TestQuantilePicking::test_stress_matches_conservative_quantile_choice PASSED [ 67%]
+tests/scenario/test_scenario_builder.py::TestInterpolation::test_two_hours_eight_slots PASSED [ 67%]
+tests/scenario/test_scenario_builder.py::TestValidation::test_empty_input_yields_empty_scenario PASSED [ 67%]
+tests/scenario/test_scenario_builder.py::TestValidation::test_mismatched_lengths_raise PASSED [ 67%]
+tests/scenario/test_scenario_builder.py::TestValidation::test_mismatched_hour_starts_raise PASSED [ 68%]
+tests/scenario/test_scenario_builder.py::TestMetadata::test_confidence_flag_propagates PASSED [ 68%]
+tests/scenario/test_scenario_builder.py::TestMetadata::test_debt_state_propagates PASSED [ 68%]
+tests/scenario/test_scenario_builder.py::TestMetadata::test_to_dict_serialises PASSED [ 68%]
+tests/simulator/test_interpolation.py::TestSplitHour::test_default_4_slots_per_hour PASSED [ 69%]
+tests/simulator/test_interpolation.py::TestSplitHour::test_zero_kwh_input_yields_zeros PASSED [ 69%]
+tests/simulator/test_interpolation.py::TestSplitHour::test_custom_slots_per_hour PASSED [ 69%]
+tests/simulator/test_interpolation.py::TestSplitHour::test_naive_ts_raises PASSED [ 69%]
+tests/simulator/test_interpolation.py::TestSplitHour::test_invalid_slots_per_hour_raises PASSED [ 70%]
+tests/simulator/test_interpolation.py::TestInterpolateSeries::test_two_consecutive_hours PASSED [ 70%]
+tests/simulator/test_interpolation.py::TestInterpolateSeries::test_empty_input_yields_empty PASSED [ 70%]
+tests/simulator/test_interpolation.py::TestConstants::test_constants_consistent PASSED [ 71%]
+tests/simulator/test_invariants.py::TestSocBounded::test_in_bounds_returns_none PASSED [ 71%]
+tests/simulator/test_invariants.py::TestSocBounded::test_at_boundary_ok PASSED [ 71%]
+tests/simulator/test_invariants.py::TestSocBounded::test_below_returns_message PASSED [ 71%]
+tests/simulator/test_invariants.py::TestSocBounded::test_strict_raises PASSED [ 72%]
+tests/simulator/test_invariants.py::TestChargeDischargeMutex::test_no_overlap_ok PASSED [ 72%]
+tests/simulator/test_invariants.py::TestChargeDischargeMutex::test_both_positive_violation PASSED [ 72%]
+tests/simulator/test_invariants.py::TestChargeDischargeMutex::test_strict_raises PASSED [ 72%]
+tests/simulator/test_invariants.py::TestInverterCapacity::test_under_cap_ok PASSED [ 73%]
+tests/simulator/test_invariants.py::TestInverterCapacity::test_at_cap_ok PASSED [ 73%]
+tests/simulator/test_invariants.py::TestInverterCapacity::test_over_cap_violation PASSED [ 73%]
+tests/simulator/test_invariants.py::TestEnergyConservation::test_balanced_step PASSED [ 73%]
+tests/simulator/test_invariants.py::TestEnergyConservation::test_violation_outside_tolerance PASSED [ 74%]
+tests/simulator/test_invariants.py::TestEnergyConservation::test_unmet_load_balances_demand PASSED [ 74%]
+tests/simulator/test_invariants.py::TestEnergyConservation::test_curtailment_balances_surplus PASSED [ 74%]
+tests/simulator/test_invariants.py::TestEnergyConservation::test_strict_raises PASSED [ 75%]
+tests/simulator/test_invariants.py::TestMinRuntime::test_all_segments_long_enough_ok PASSED [ 75%]
+tests/simulator/test_invariants.py::TestMinRuntime::test_short_segment_violation PASSED [ 75%]
+tests/simulator/test_invariants.py::TestMinRuntime::test_zero_duration_ignored PASSED [ 75%]
+tests/simulator/test_invariants.py::TestMinRuntime::test_strict_raises PASSED [ 76%]
+tests/simulator/test_invariants.py::TestNoContradictoryActions::test_consistent_actions_ok PASSED [ 76%]
+tests/simulator/test_invariants.py::TestNoContradictoryActions::test_contradictory_actions_flagged PASSED [ 76%]
+tests/simulator/test_invariants.py::TestNoContradictoryActions::test_ignores_unknown_format PASSED [ 76%]
+tests/simulator/test_invariants.py::TestDebtMonotonic::test_execution_allows_drop PASSED [ 77%]
+tests/simulator/test_invariants.py::TestDebtMonotonic::test_drop_without_execution_flagged PASSED [ 77%]
+tests/simulator/test_invariants.py::TestDebtMonotonic::test_constant_or_growing_debt_ok PASSED [ 77%]
+tests/simulator/test_invariants.py::TestConstants::test_tolerance_value_sane PASSED [ 78%]
+tests/simulator/test_physics_model.py::TestConfigs::test_battery_rejects_non_positive_capacity PASSED [ 78%]
+tests/simulator/test_physics_model.py::TestConfigs::test_battery_rejects_inverted_health_bounds PASSED [ 78%]
+tests/simulator/test_physics_model.py::TestConfigs::test_battery_rejects_out_of_range_efficiency PASSED [ 78%]
+tests/simulator/test_physics_model.py::TestConfigs::test_system_rejects_non_positive_inverter PASSED [ 79%]
+tests/simulator/test_physics_model.py::TestSurplusFlow::test_surplus_charges_battery_until_full PASSED [ 79%]
+tests/simulator/test_physics_model.py::TestSurplusFlow::test_overflow_surplus_exports_to_grid PASSED [ 79%]
+tests/simulator/test_physics_model.py::TestSurplusFlow::test_surplus_curtailed_when_grid_export_capped PASSED [ 79%]
+tests/simulator/test_physics_model.py::TestSurplusFlow::test_inverter_caps_charge_power PASSED [ 80%]
+tests/simulator/test_physics_model.py::TestDeficitFlow::test_deficit_discharges_battery PASSED [ 80%]
+tests/simulator/test_physics_model.py::TestDeficitFlow::test_deficit_imports_from_grid_when_battery_empty PASSED [ 80%]
+tests/simulator/test_physics_model.py::TestDeficitFlow::test_unmet_load_when_grid_capped PASSED [ 80%]
+tests/simulator/test_physics_model.py::TestForcedActions::test_forced_charge_overrides_natural_self_consumption PASSED [ 81%]
+tests/simulator/test_physics_model.py::TestForcedActions::test_forced_discharge_clipped_at_floor PASSED [ 81%]
+tests/simulator/test_physics_model.py::TestForcedActions::test_cannot_force_both_directions PASSED [ 81%]
+tests/simulator/test_physics_model.py::TestForcedActions::test_negative_forced_powers_rejected PASSED [ 82%]
+tests/simulator/test_physics_model.py::TestSocBounds::test_soc_never_exceeds_health_max PASSED [ 82%]
+tests/simulator/test_physics_model.py::TestSocBounds::test_soc_never_drops_below_health_min PASSED [ 82%]
+tests/simulator/test_physics_model.py::TestEfficiency::test_charge_efficiency_reduces_dc_delta PASSED [ 82%]
+tests/simulator/test_physics_model.py::TestEfficiency::test_discharge_efficiency_drains_more_dc PASSED [ 83%]
+tests/simulator/test_physics_model.py::TestValidation::test_non_positive_dt_raises PASSED [ 83%]
+tests/simulator/test_simulate_soc.py::TestEmpty::test_empty_input_returns_initial_soc PASSED [ 83%]
+tests/simulator/test_simulate_soc.py::TestEmpty::test_single_slot_zero_flows_keeps_soc PASSED [ 83%]
+tests/simulator/test_simulate_soc.py::TestTimeOrdering::test_unsorted_input_raises PASSED [ 84%]
+tests/simulator/test_simulate_soc.py::TestTimeOrdering::test_duplicate_timestamps_raise PASSED [ 84%]
+tests/simulator/test_simulate_soc.py::TestInitialSoc::test_initial_soc_below_min_clamps_and_records PASSED [ 84%]
+tests/simulator/test_simulate_soc.py::TestInitialSoc::test_strict_mode_raises_on_out_of_bounds_initial PASSED [ 84%]
+tests/simulator/test_simulate_soc.py::TestEnergyConservation::test_24h_pure_self_consumption_balances PASSED [ 85%]
+tests/simulator/test_simulate_soc.py::TestEnergyConservation::test_strict_mode_raises_on_bad_initial PASSED [ 85%]
+tests/simulator/test_simulate_soc.py::TestTrajectory::test_charging_increases_soc_over_slots PASSED [ 85%]
+tests/simulator/test_simulate_soc.py::TestTrajectory::test_discharging_decreases_soc PASSED [ 86%]
+tests/simulator/test_simulate_soc.py::TestTrajectory::test_forced_charge_overrides_self_consumption PASSED [ 86%]
+tests/simulator/test_simulate_soc.py::TestPlannedLoads::test_planned_loads_increase_house_demand PASSED [ 86%]
+tests/simulator/test_simulate_soc.py::TestResult::test_has_violations_flag PASSED [ 86%]
+tests/state/test_system_state.py::TestConstruction::test_naive_cycle_ts_rejected PASSED [ 87%]
+tests/state/test_system_state.py::TestImmutable::test_with_battery_returns_new_instance PASSED [ 87%]
+tests/state/test_system_state.py::TestImmutable::test_with_world_state PASSED [ 87%]
+tests/state/test_system_state.py::TestImmutable::test_with_planner_history PASSED [ 87%]
+tests/state/test_system_state.py::TestSerialisation::test_to_dict_then_from_dict_round_trips PASSED [ 88%]
+tests/state/test_system_state.py::TestSerialisation::test_battery_state_serialisation PASSED [ 88%]
+tests/state/test_system_state.py::TestSerialisation::test_battery_state_none_last_updated PASSED [ 88%]
+tests/state/test_system_state.py::TestSerialisation::test_execution_world_state_is_on PASSED [ 89%]
+tests/state/test_system_state.py::TestSerialisation::test_from_dict_normalises_naive_iso PASSED [ 89%]
+tests/state/test_system_state.py::TestPersistence::test_save_load_round_trip PASSED [ 89%]
+tests/state/test_system_state.py::TestPersistence::test_load_nonexistent_returns_none PASSED [ 89%]
+tests/state/test_system_state.py::TestPersistence::test_atomic_write_no_tmp_leftovers PASSED [ 90%]
+tests/state/test_system_state.py::TestPersistence::test_save_creates_parent_dir PASSED [ 90%]
+tests/test_main_logic.py::test_module_imports_without_side_effects ERROR [ 90%]
+tests/test_main_logic.py::test_version_matches_config_yaml ERROR         [ 90%]
+tests/test_main_logic.py::test_current_tariff_periods ERROR              [ 91%]
+tests/test_main_logic.py::test_score_entity_domain_gate ERROR            [ 91%]
+tests/test_main_logic.py::test_score_entity_device_class_unit_and_keywords ERROR [ 91%]
+tests/test_main_logic.py::test_get_entity_candidates_ranks_best_first ERROR [ 91%]
+tests/test_main_logic.py::test_solar_proxy_is_zero_at_night ERROR        [ 92%]
+tests/test_main_logic.py::test_solar_proxy_peaks_at_summer_noon ERROR    [ 92%]
+tests/test_main_logic.py::test_is_storm_forecast_current_condition ERROR [ 92%]
+tests/test_main_logic.py::test_is_storm_forecast_from_future_entry ERROR [ 93%]
+tests/test_main_logic.py::test_is_storm_forecast_clear ERROR             [ 93%]
+tests/test_main_logic.py::test_optimal_soc_scales_with_peak_hours ERROR  [ 93%]
+tests/test_main_logic.py::test_optimal_soc_respects_health_mode_floor ERROR [ 93%]
+tests/test_main_logic.py::test_optimal_soc_cold_weather_raises_target ERROR [ 94%]
+tests/test_main_logic.py::test_send_daily_summary_returns_action_count ERROR [ 94%]
+tests/test_main_logic.py::test_charge_hysteresis_holds_until_band_is_cleared ERROR [ 94%]
+tests/test_main_logic.py::test_charge_hysteresis_zero_restores_bang_bang ERROR [ 94%]
+tests/test_main_logic.py::test_decide_battery_does_not_flap_at_ceiling ERROR [ 95%]
+tests/test_setup_integrity.py::TestNoConflicts::test_empty_wizard PASSED [ 95%]
+tests/test_setup_integrity.py::TestNoConflicts::test_none_input PASSED   [ 95%]
+tests/test_setup_integrity.py::TestNoConflicts::test_minimal_valid_setup PASSED [ 95%]
+tests/test_setup_integrity.py::TestNoConflicts::test_full_setup_no_collisions PASSED [ 96%]
+tests/test_setup_integrity.py::TestCriticalConflicts::test_pool_switch_also_custom_load PASSED [ 96%]
+tests/test_setup_integrity.py::TestCriticalConflicts::test_two_custom_loads_same_switch PASSED [ 96%]
+tests/test_setup_integrity.py::TestCriticalConflicts::test_actuable_collides_with_sensor_role PASSED [ 97%]
+tests/test_setup_integrity.py::TestCriticalConflicts::test_hvac_climate_collides_with_custom_load PASSED [ 97%]
+tests/test_setup_integrity.py::TestWarnings::test_same_sensor_in_two_sensor_roles PASSED [ 97%]
+tests/test_setup_integrity.py::TestWarnings::test_submeter_also_used_as_grid_power PASSED [ 97%]
+tests/test_setup_integrity.py::TestWarnings::test_warnings_dont_fail_setup PASSED [ 98%]
+tests/test_setup_integrity.py::TestMixed::test_one_critical_plus_one_warning PASSED [ 98%]
+tests/test_setup_integrity.py::TestEdgeCases::test_empty_strings_ignored PASSED [ 98%]
+tests/test_setup_integrity.py::TestEdgeCases::test_none_values_ignored PASSED [ 98%]
+tests/test_setup_integrity.py::TestEdgeCases::test_non_string_values_ignored PASSED [ 99%]
+tests/test_setup_integrity.py::TestEdgeCases::test_malformed_custom_loads_skipped PASSED [ 99%]
+tests/test_setup_integrity.py::TestEdgeCases::test_summary_includes_all_conflicts PASSED [ 99%]
+tests/test_setup_integrity.py::TestEdgeCases::test_to_dict_serialisable PASSED [100%]
+
+==================================== ERRORS ====================================
+__________ ERROR at setup of test_module_imports_without_side_effects __________
+tests/test_main_logic.py:33: in mod
+    spec.loader.exec_module(m)
+<frozen importlib._bootstrap_external>:759: in exec_module
+    ???
+<frozen importlib._bootstrap>:491: in _call_with_frames_removed
+    ???
+rootfs/usr/bin/energy_optimizer.py:22: in <module>
+    import pandas as pd
+E   ModuleNotFoundError: No module named 'pandas'
+______________ ERROR at setup of test_version_matches_config_yaml ______________
+tests/test_main_logic.py:33: in mod
+    spec.loader.exec_module(m)
+<frozen importlib._bootstrap_external>:759: in exec_module
+    ???
+<frozen importlib._bootstrap>:491: in _call_with_frames_removed
+    ???
+rootfs/usr/bin/energy_optimizer.py:22: in <module>
+    import pandas as pd
+E   ModuleNotFoundError: No module named 'pandas'
+________________ ERROR at setup of test_current_tariff_periods _________________
+tests/test_main_logic.py:33: in mod
+    spec.loader.exec_module(m)
+<frozen importlib._bootstrap_external>:759: in exec_module
+    ???
+<frozen importlib._bootstrap>:491: in _call_with_frames_removed
+    ???
+rootfs/usr/bin/energy_optimizer.py:22: in <module>
+    import pandas as pd
+E   ModuleNotFoundError: No module named 'pandas'
+_______________ ERROR at setup of test_score_entity_domain_gate ________________
+tests/test_main_logic.py:33: in mod
+    spec.loader.exec_module(m)
+<frozen importlib._bootstrap_external>:759: in exec_module
+    ???
+<frozen importlib._bootstrap>:491: in _call_with_frames_removed
+    ???
+rootfs/usr/bin/energy_optimizer.py:22: in <module>
+    import pandas as pd
+E   ModuleNotFoundError: No module named 'pandas'
+______ ERROR at setup of test_score_entity_device_class_unit_and_keywords ______
+tests/test_main_logic.py:33: in mod
+    spec.loader.exec_module(m)
+<frozen importlib._bootstrap_external>:759: in exec_module
+    ???
+<frozen importlib._bootstrap>:491: in _call_with_frames_removed
+    ???
+rootfs/usr/bin/energy_optimizer.py:22: in <module>
+    import pandas as pd
+E   ModuleNotFoundError: No module named 'pandas'
+________ ERROR at setup of test_get_entity_candidates_ranks_best_first _________
+tests/test_main_logic.py:33: in mod
+    spec.loader.exec_module(m)
+<frozen importlib._bootstrap_external>:759: in exec_module
+    ???
+<frozen importlib._bootstrap>:491: in _call_with_frames_removed
+    ???
+rootfs/usr/bin/energy_optimizer.py:22: in <module>
+    import pandas as pd
+E   ModuleNotFoundError: No module named 'pandas'
+_____________ ERROR at setup of test_solar_proxy_is_zero_at_night ______________
+tests/test_main_logic.py:33: in mod
+    spec.loader.exec_module(m)
+<frozen importlib._bootstrap_external>:759: in exec_module
+    ???
+<frozen importlib._bootstrap>:491: in _call_with_frames_removed
+    ???
+rootfs/usr/bin/energy_optimizer.py:22: in <module>
+    import pandas as pd
+E   ModuleNotFoundError: No module named 'pandas'
+___________ ERROR at setup of test_solar_proxy_peaks_at_summer_noon ____________
+tests/test_main_logic.py:33: in mod
+    spec.loader.exec_module(m)
+<frozen importlib._bootstrap_external>:759: in exec_module
+    ???
+<frozen importlib._bootstrap>:491: in _call_with_frames_removed
+    ???
+rootfs/usr/bin/energy_optimizer.py:22: in <module>
+    import pandas as pd
+E   ModuleNotFoundError: No module named 'pandas'
+__________ ERROR at setup of test_is_storm_forecast_current_condition __________
+tests/test_main_logic.py:33: in mod
+    spec.loader.exec_module(m)
+<frozen importlib._bootstrap_external>:759: in exec_module
+    ???
+<frozen importlib._bootstrap>:491: in _call_with_frames_removed
+    ???
+rootfs/usr/bin/energy_optimizer.py:22: in <module>
+    import pandas as pd
+E   ModuleNotFoundError: No module named 'pandas'
+__________ ERROR at setup of test_is_storm_forecast_from_future_entry __________
+tests/test_main_logic.py:33: in mod
+    spec.loader.exec_module(m)
+<frozen importlib._bootstrap_external>:759: in exec_module
+    ???
+<frozen importlib._bootstrap>:491: in _call_with_frames_removed
+    ???
+rootfs/usr/bin/energy_optimizer.py:22: in <module>
+    import pandas as pd
+E   ModuleNotFoundError: No module named 'pandas'
+________________ ERROR at setup of test_is_storm_forecast_clear ________________
+tests/test_main_logic.py:33: in mod
+    spec.loader.exec_module(m)
+<frozen importlib._bootstrap_external>:759: in exec_module
+    ???
+<frozen importlib._bootstrap>:491: in _call_with_frames_removed
+    ???
+rootfs/usr/bin/energy_optimizer.py:22: in <module>
+    import pandas as pd
+E   ModuleNotFoundError: No module named 'pandas'
+__________ ERROR at setup of test_optimal_soc_scales_with_peak_hours ___________
+tests/test_main_logic.py:33: in mod
+    spec.loader.exec_module(m)
+<frozen importlib._bootstrap_external>:759: in exec_module
+    ???
+<frozen importlib._bootstrap>:491: in _call_with_frames_removed
+    ???
+rootfs/usr/bin/energy_optimizer.py:22: in <module>
+    import pandas as pd
+E   ModuleNotFoundError: No module named 'pandas'
+________ ERROR at setup of test_optimal_soc_respects_health_mode_floor _________
+tests/test_main_logic.py:33: in mod
+    spec.loader.exec_module(m)
+<frozen importlib._bootstrap_external>:759: in exec_module
+    ???
+<frozen importlib._bootstrap>:491: in _call_with_frames_removed
+    ???
+rootfs/usr/bin/energy_optimizer.py:22: in <module>
+    import pandas as pd
+E   ModuleNotFoundError: No module named 'pandas'
+________ ERROR at setup of test_optimal_soc_cold_weather_raises_target _________
+tests/test_main_logic.py:33: in mod
+    spec.loader.exec_module(m)
+<frozen importlib._bootstrap_external>:759: in exec_module
+    ???
+<frozen importlib._bootstrap>:491: in _call_with_frames_removed
+    ???
+rootfs/usr/bin/energy_optimizer.py:22: in <module>
+    import pandas as pd
+E   ModuleNotFoundError: No module named 'pandas'
+________ ERROR at setup of test_send_daily_summary_returns_action_count ________
+tests/test_main_logic.py:33: in mod
+    spec.loader.exec_module(m)
+<frozen importlib._bootstrap_external>:759: in exec_module
+    ???
+<frozen importlib._bootstrap>:491: in _call_with_frames_removed
+    ???
+rootfs/usr/bin/energy_optimizer.py:22: in <module>
+    import pandas as pd
+E   ModuleNotFoundError: No module named 'pandas'
+_____ ERROR at setup of test_charge_hysteresis_holds_until_band_is_cleared _____
+tests/test_main_logic.py:33: in mod
+    spec.loader.exec_module(m)
+<frozen importlib._bootstrap_external>:759: in exec_module
+    ???
+<frozen importlib._bootstrap>:491: in _call_with_frames_removed
+    ???
+rootfs/usr/bin/energy_optimizer.py:22: in <module>
+    import pandas as pd
+E   ModuleNotFoundError: No module named 'pandas'
+_______ ERROR at setup of test_charge_hysteresis_zero_restores_bang_bang _______
+tests/test_main_logic.py:33: in mod
+    spec.loader.exec_module(m)
+<frozen importlib._bootstrap_external>:759: in exec_module
+    ???
+<frozen importlib._bootstrap>:491: in _call_with_frames_removed
+    ???
+rootfs/usr/bin/energy_optimizer.py:22: in <module>
+    import pandas as pd
+E   ModuleNotFoundError: No module named 'pandas'
+________ ERROR at setup of test_decide_battery_does_not_flap_at_ceiling ________
+tests/test_main_logic.py:33: in mod
+    spec.loader.exec_module(m)
+<frozen importlib._bootstrap_external>:759: in exec_module
+    ???
+<frozen importlib._bootstrap>:491: in _call_with_frames_removed
+    ???
+rootfs/usr/bin/energy_optimizer.py:22: in <module>
+    import pandas as pd
+E   ModuleNotFoundError: No module named 'pandas'
+=========================== short test summary info ============================
+ERROR tests/test_main_logic.py::test_module_imports_without_side_effects - Mo...
+ERROR tests/test_main_logic.py::test_version_matches_config_yaml - ModuleNotF...
+ERROR tests/test_main_logic.py::test_current_tariff_periods - ModuleNotFoundE...
+ERROR tests/test_main_logic.py::test_score_entity_domain_gate - ModuleNotFoun...
+ERROR tests/test_main_logic.py::test_score_entity_device_class_unit_and_keywords
+ERROR tests/test_main_logic.py::test_get_entity_candidates_ranks_best_first
+ERROR tests/test_main_logic.py::test_solar_proxy_is_zero_at_night - ModuleNot...
+ERROR tests/test_main_logic.py::test_solar_proxy_peaks_at_summer_noon - Modul...
+ERROR tests/test_main_logic.py::test_is_storm_forecast_current_condition - Mo...
+ERROR tests/test_main_logic.py::test_is_storm_forecast_from_future_entry - Mo...
+ERROR tests/test_main_logic.py::test_is_storm_forecast_clear - ModuleNotFound...
+ERROR tests/test_main_logic.py::test_optimal_soc_scales_with_peak_hours - Mod...
+ERROR tests/test_main_logic.py::test_optimal_soc_respects_health_mode_floor
+ERROR tests/test_main_logic.py::test_optimal_soc_cold_weather_raises_target
+ERROR tests/test_main_logic.py::test_send_daily_summary_returns_action_count
+ERROR tests/test_main_logic.py::test_charge_hysteresis_holds_until_band_is_cleared
+ERROR tests/test_main_logic.py::test_charge_hysteresis_zero_restores_bang_bang
+ERROR tests/test_main_logic.py::test_decide_battery_does_not_flap_at_ceiling
+======================= 355 passed, 18 errors in 22.97s ========================

@@ -26,7 +26,7 @@ from flask import Flask, jsonify, request
 
 # ── ML feature version — increment when feature engineering changes ───────────
 MODEL_FEATURE_VER = 3   # v3: dynamic features from wizard (temp_outdoor, solar, grid, submeters)
-ADD_ON_VERSION = "5.0.20"  # SOURCE OF TRUTH — bump here AND in config.yaml together
+ADD_ON_VERSION = "5.0.21"  # SOURCE OF TRUTH — bump here AND in config.yaml together
 
 # ── Location (solar elevation formula) ───────────────────────────────────────
 HOME_LAT = 40.67   # Guadarrama, Madrid — °N (fallback; wizard overrides)
@@ -6637,8 +6637,8 @@ def _hourly_from_decisions(date_str: str) -> dict:
         sol  = sum(d["sol"]) * K
         gimp = sum(max(-g, 0) for g in d["grid"]) * K
         gexp = sum(max(g, 0) for g in d["grid"]) * K
-        bchg = sum(max(-b, 0) for b in d["bat"]) * K
-        bdis = sum(max(b, 0) for b in d["bat"]) * K
+        bchg = sum(max(b, 0) for b in d["bat"]) * K  # bat > 0 = charging (per line 624)
+        bdis = sum(max(-b, 0) for b in d["bat"]) * K  # bat < 0 = discharging (per line 624)
         cons = max(0.0, sol + bdis + gimp - gexp - bchg)
         res["solar"].append(round(sol, 3))
         res["grid_import"].append(round(gimp, 3))
@@ -6736,8 +6736,8 @@ def _daily_kpi_averages() -> dict:
                 d["sol"]  += max(sol, 0) * K
                 d["gimp"] += max(-grid, 0) * K
                 d["gexp"] += max(grid, 0) * K
-                d["bdis"] += max(bat, 0) * K   # bat > 0 = discharging
-                d["bchg"] += max(-bat, 0) * K  # bat < 0 = charging
+                d["bchg"] += max(bat, 0) * K   # bat > 0 = charging (per line 624)
+                d["bdis"] += max(-bat, 0) * K  # bat < 0 = discharging (per line 624)
         except Exception:
             pass
 
