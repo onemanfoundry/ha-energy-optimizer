@@ -713,8 +713,14 @@ def _batt(role: str, cfg_key: str, hardcoded: str) -> str:
 def set_battery_charge_target(target_soc: int, charge_power_w: int = 3000) -> bool:
     ops = [
         ha_set_number(_batt("battery_cutoff_soc",   "number_battery_charge_cutoff", "number.battery_grid_charge_cutoff_soc"), target_soc),
-        ha_set_number(_batt("battery_backup_soc",   "number_battery_backup_soc",   ""),       target_soc),
     ]
+    # Backup SOC — opt-in like the other battery roles below. An empty/invalid
+    # entity (wizard intentionally blank, or a stale legacy options.json value
+    # left over from a previous wizard run) must not fire a doomed
+    # number/set_value call that taints the whole op as ok=False (#backup_soc).
+    backup_entity = _batt("battery_backup_soc", "number_battery_backup_soc", "")
+    if backup_entity:
+        ops.append(ha_set_number(backup_entity, target_soc))
     # Mode select — opt-in. GoodWe handles charging through standalone fast-charge
     # registers and has no mode entity for this; firing select.select_option against
     # a missing/foreign entity returns 400 and taints the whole op as ok=False (#7).
@@ -746,8 +752,10 @@ def set_battery_self_consumption(min_soc: int | None = None) -> bool:
     # all peak (#7).
     ops = [
         ha_set_number(_batt("battery_cutoff_soc",  "number_battery_charge_cutoff", "number.battery_grid_charge_cutoff_soc"), min_soc),
-        ha_set_number(_batt("battery_backup_soc",  "number_battery_backup_soc",   ""), min_soc),
     ]
+    backup_entity = _batt("battery_backup_soc", "number_battery_backup_soc", "")
+    if backup_entity:
+        ops.append(ha_set_number(backup_entity, min_soc))
     mode_entity = _batt("battery_mode_select", "select_battery_mode", "")
     if mode_entity:
         ops.append(ha_set_select(mode_entity, "maximise_self_consumption"))
