@@ -597,6 +597,39 @@ All data lives in `/data/` inside the add-on container (persists across restarts
 
 ## Changelog
 
+### v5.0.22 — Controlled heat/cool devices: emergency tier + comfort/savings weight + real override writes
+
+Zones with a plain thermostat-style setpoint were already covered by the
+existing Comfort/Surplus/Minimum temperatures. This release adds an
+opt-in fourth tier and a dial for heat pumps and other devices that run
+their **own internal day/night schedule** and may silently ignore a plain
+setpoint outside manual mode — confirmed on a Vaillant Genia Air install
+where `number.genia_air_manual_setpoint` had zero physical effect while
+`select.genia_air_heating_operation_mode` stayed on `auto`.
+
+Tick **"Controlled heat/cool device"** on a zone (hidden by default — only
+shows for installations that actually have one) to unlock:
+
+- **A 4th "Emergency" tier**, heat and cool. Triggers only when the zone's
+  indoor-temperature sensor is genuinely missing (not just reporting a
+  default fallback) — a safe, conservative target instead of guessing.
+- **Symmetric cool-side tiers** (Comfort/Surplus/Minimum/Emergency °C) for
+  summer, matching the existing heat-side ones — the dial and the gates
+  work the same way in both seasons.
+- **A Comfort ↔ Savings weight (0-100)** that blends the "otherwise
+  minimum/inactive" tier continuously between the Minimum and Comfort
+  targets — `0` is pure savings (today's behaviour), `100` keeps the
+  house near Comfort even outside scheduled comfort hours. Surplus and
+  explicit Comfort-hour targets are untouched by the weight on purpose.
+- **A real override entity per zone** (heat, optionally a separate one for
+  cool). When set, the engine writes here instead of the plain
+  setpoint — e.g. a heat pump's quick-veto register, which the controller
+  actually honours regardless of its own schedule. Re-asserted every
+  cycle, so it never silently reverts to the device's own program.
+
+Zones that leave the checkbox unticked are byte-for-byte unaffected —
+this is purely additive to `_hp_zone_decision()`.
+
 ### v5.0.20 — Charge hysteresis + daily-summary NameError
 
 Two defects found while auditing a real overnight grid charge on Sergio's install (night of 2026-08-25 → 26).

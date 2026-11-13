@@ -1,6 +1,6 @@
 name: "Energy Optimizer"
 description: "Smart energy management: solar battery, heat pump, pool pump, pool cleaner and dishwasher with ML + adaptive tariff rules."
-version: "5.0.21"
+version: "5.0.22"
 slug: "energy_optimizer"
 init: false
 arch:
@@ -34,7 +34,7 @@ options:
 
   # ── Seasons ────────────────────────────────────────────────────────────────────────────────────────
   summer_start_month: 6
-  summer_end_month: 9
+  summer_end_month: 8
 
   # ── Battery thresholds ─────────────────────────────────────────────────────────────────────────────
   solar_tomorrow_irrisoria_kwh: 2.0
@@ -71,6 +71,9 @@ options:
 
   # ── Pool cleaner (limpiafondos, ~1.5 kWh) — auto-runs first 15 min with pump
   switch_pool_cleaner: ""
+
+  # ── Pool target hours ─────────────────────────────────────────────────────────────────────────────
+  pool_daily_target_hours: 1.0
 
   # ── Heat pump actuators ────────────────────────────────────────────────────────────────────────────
   number_hvac_cool: ""
@@ -173,6 +176,7 @@ schema:
   sensor_pool_hours_week: str
   switch_pool: str
   switch_pool_cleaner: str
+  pool_daily_target_hours: float
   number_hvac_cool: str
   number_hvac_heat: str
   number_battery_charge_cutoff: str

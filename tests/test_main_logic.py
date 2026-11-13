@@ -295,3 +295,162 @@ def test_decide_battery_does_not_flap_at_ceiling(mod, monkeypatch):
     assert actions == ["charge", "charge", "self_consumption", "self_consumption",
                        "self_consumption", "self_consumption", "self_consumption",
                        "charge"]
+
+
+# ── _hp_zone_decision: controlled_hvac (comfort/savings weight + overrides) ──
+# These cover the "controlled heat/cool device" tier added for heat pumps
+# whose own firmware ignores a plain setpoint outside manual mode (e.g.
+# Vaillant Genia Air in auto/day/night mode — see genia-air-ha memory). A
+# zone with controlled_hvac unset/false must behave exactly as before.
+
+def _hvac_zone(mod, monkeypatch, *, summer=False, surplus=False, **zone_overrides):
+    monkeypatch.setattr(mod, "_is_summer", lambda: summer)
+    monkeypatch.setattr(mod, "_has_surplus_power", lambda soc, pwr: surplus)
+    zone = {
+        "name": "Test zone", "temp_heat": "number.heat_setpoint",
+        "temp_cool": "number.cool_setpoint",
+        "sched": {str(h): "minimum" for h in range(24)},
+    }
+    zone.update(zone_overrides)
+    sensors = {"battery_soc": 50.0, "battery_power": 0.0, "temp_indoor": 19.0,
+               "temp_zone_0": 19.0}
+    return zone, sensors
+
+
+def test_hp_zone_decision_legacy_unaffected_by_new_fields(mod, monkeypatch):
+    """controlled_hvac unset → identical to pre-feature behaviour, even if
+    override_heat/temp_emergency/weight are present in the zone dict (e.g.
+    leftover config from toggling the checkbox off)."""
+    zone, sensors = _hvac_zone(mod, monkeypatch, summer=False,
+                                override_heat="number.quick_veto",
+                                comfort_savings_weight=0, temp_emergency=5.0)
+    d = mod._hp_zone_decision(sensors, zone, 0)
+    assert d["entity"] == "number.heat_setpoint"      # NOT the override
+    assert d["target"] == 18.0                          # plain temp_min default
+    assert d["reason"] == "Minimum heating [Test zone]"
+
+
+def test_hp_zone_decision_controlled_weight_zero_is_pure_savings(mod, monkeypatch):
+    zone, sensors = _hvac_zone(mod, monkeypatch, summer=False, controlled_hvac=True,
+                                temp_comfort=22.0, temp_min=18.0,
+                                comfort_savings_weight=0)
+    d = mod._hp_zone_decision(sensors, zone, 0)
+    assert d["target"] == 18.0
+
+
+def test_hp_zone_decision_controlled_weight_hundred_is_pure_comfort(mod, monkeypatch):
+    zone, sensors = _hvac_zone(mod, monkeypatch, summer=False, controlled_hvac=True,
+                                temp_comfort=22.0, temp_min=18.0,
+                                comfort_savings_weight=100)
+    d = mod._hp_zone_decision(sensors, zone, 0)
+    assert d["target"] == 22.0
+
+
+def test_hp_zone_decision_controlled_weight_blends_linearly(mod, monkeypatch):
+    zone, sensors = _hvac_zone(mod, monkeypatch, summer=False, controlled_hvac=True,
+                                temp_comfort=22.0, temp_min=18.0,
+                                comfort_savings_weight=50)
+    d = mod._hp_zone_decision(sensors, zone, 0)
+    assert d["target"] == 20.0
+
+
+def test_hp_zone_decision_controlled_writes_to_override_entity(mod, monkeypatch):
+    zone, sensors = _hvac_zone(mod, monkeypatch, summer=False, controlled_hvac=True,
+                                override_heat="number.genia_air_quick_veto_setpoint")
+    d = mod._hp_zone_decision(sensors, zone, 0)
+    assert d["entity"] == "number.genia_air_quick_veto_setpoint"
+
+
+def test_hp_zone_decision_controlled_falls_back_without_override_entity(mod, monkeypatch):
+    zone, sensors = _hvac_zone(mod, monkeypatch, summer=False, controlled_hvac=True)
+    d = mod._hp_zone_decision(sensors, zone, 0)
+    assert d["entity"] == "number.heat_setpoint"
+
+
+def test_hp_zone_decision_comfort_and_surplus_tiers_ignore_weight(mod, monkeypatch):
+    # Weight only tunes the "otherwise min/inactive" tier — comfort/surplus
+    # stay exactly at their configured values regardless of the dial.
+    zone, sensors = _hvac_zone(mod, monkeypatch, summer=False, controlled_hvac=True,
+                                temp_comfort=22.0, temp_surplus=24.0,
+                                comfort_savings_weight=0,
+                                sched={str(h): "comfort" for h in range(24)})
+    d = mod._hp_zone_decision(sensors, zone, 0)
+    assert d["target"] == 22.0
+
+    zone2, sensors2 = _hvac_zone(mod, monkeypatch, summer=False, controlled_hvac=True,
+                                  surplus=True, temp_comfort=22.0, temp_surplus=24.0,
+                                  comfort_savings_weight=0)
+    d2 = mod._hp_zone_decision(sensors2, zone2, 0)
+    assert d2["target"] == 24.0
+
+
+def test_hp_zone_decision_emergency_when_sensor_missing_and_controlled(mod, monkeypatch):
+    zone, sensors = _hvac_zone(mod, monkeypatch, summer=False, controlled_hvac=True,
+                                temp_emergency=15.5)
+    del sensors["temp_zone_0"]
+    del sensors["temp_indoor"]
+    d = mod._hp_zone_decision(sensors, zone, 0)
+    assert d["target"] == 15.5
+    assert "Emergency" in d["reason"]
+    assert d["skip"] is False
+
+
+def test_hp_zone_decision_emergency_inert_for_non_controlled_zone(mod, monkeypatch):
+    """Without controlled_hvac, a missing sensor must keep the pre-feature
+    behaviour (fall back to the 20.0 default inside the normal branches),
+    not silently start emitting emergency targets for plain zones."""
+    zone, sensors = _hvac_zone(mod, monkeypatch, summer=False, temp_emergency=15.5)
+    del sensors["temp_zone_0"]
+    del sensors["temp_indoor"]
+    d = mod._hp_zone_decision(sensors, zone, 0)
+    assert d["target"] == 18.0
+    assert "Emergency" not in d["reason"]
+
+
+def test_hp_zone_decision_summer_controlled_thermal_override_uses_comfort_cool(mod, monkeypatch):
+    zone, sensors = _hvac_zone(mod, monkeypatch, summer=True, controlled_hvac=True,
+                                temp_comfort_cool=24.0)
+    monkeypatch.setattr(mod, "cfg", lambda k, d=None:
+                         {"hvac_summer_override_c": 29.0}.get(k, d))
+    sensors["temp_zone_0"] = 30.0
+    sensors["temp_outdoor"] = 30.0  # not cooler than indoor → no free-cooling gate
+    d = mod._hp_zone_decision(sensors, zone, 0)
+    assert d["target"] == 24.0
+    assert d["entity"] == "number.cool_setpoint"
+
+
+def test_hp_zone_decision_summer_controlled_surplus_uses_surplus_cool(mod, monkeypatch):
+    zone, sensors = _hvac_zone(mod, monkeypatch, summer=True, surplus=True,
+                                controlled_hvac=True, temp_surplus_cool=21.0)
+    monkeypatch.setattr(mod, "cfg", lambda k, d=None:
+                         {"hvac_summer_override_c": 29.0,
+                          "cooling_outdoor_max_c": 22.0}.get(k, d))
+    sensors["temp_outdoor"] = 28.0  # too warm outside for the free-cooling gate
+    d = mod._hp_zone_decision(sensors, zone, 0)
+    assert d["target"] == 21.0
+
+
+def test_hp_zone_decision_summer_controlled_weight_blends_eco_tier(mod, monkeypatch):
+    zone, sensors = _hvac_zone(mod, monkeypatch, summer=True, controlled_hvac=True,
+                                temp_comfort_cool=24.0, temp_min_cool=27.0,
+                                comfort_savings_weight=0)
+    monkeypatch.setattr(mod, "cfg", lambda k, d=None:
+                         {"hvac_summer_override_c": 29.0,
+                          "cooling_outdoor_max_c": 22.0}.get(k, d))
+    sensors["temp_outdoor"] = 28.0
+    d = mod._hp_zone_decision(sensors, zone, 0)
+    assert d["target"] == 27.0  # weight=0 → pure eco (warmest)
+    assert d["skip"] is False
+
+
+def test_hp_zone_decision_summer_non_controlled_stays_inactive(mod, monkeypatch):
+    """Backward compat: without controlled_hvac, the "no surplus, below
+    override" case is still a full skip — no new eco-cooling tier appears
+    for plain zones."""
+    zone, sensors = _hvac_zone(mod, monkeypatch, summer=True)
+    monkeypatch.setattr(mod, "cfg", lambda k, d=None:
+                         {"hvac_summer_override_c": 29.0,
+                          "cooling_outdoor_max_c": 22.0}.get(k, d))
+    sensors["temp_outdoor"] = 28.0
+    d = mod._hp_zone_decision(sensors, zone, 0)
+    assert d["skip"] is True

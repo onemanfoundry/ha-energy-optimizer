@@ -26,7 +26,7 @@ from flask import Flask, jsonify, request
 
 # ── ML feature version — increment when feature engineering changes ───────────
 MODEL_FEATURE_VER = 3   # v3: dynamic features from wizard (temp_outdoor, solar, grid, submeters)
-ADD_ON_VERSION = "5.0.21"  # SOURCE OF TRUTH — bump here AND in config.yaml together
+ADD_ON_VERSION = "5.0.22"  # SOURCE OF TRUTH — bump here AND in config.yaml together
 
 # ── Location (solar elevation formula) ───────────────────────────────────────
 HOME_LAT = 40.67   # Guadarrama, Madrid — °N (fallback; wizard overrides)
@@ -1684,7 +1684,8 @@ def _hp_zone_decision(sensors: dict, zone: dict, zone_idx: int) -> dict:
     batt_power = sensors["battery_power"]
     summer     = _is_summer()
     free_power = _has_surplus_power(soc, batt_power)
-    temp_in    = sensors.get(f"temp_zone_{zone_idx}", sensors.get("temp_indoor", 20.0))
+    sensor_key = f"temp_zone_{zone_idx}"
+    temp_in    = sensors.get(sensor_key, sensors.get("temp_indoor", 20.0))
     temp_out_raw = sensors.get("temp_outdoor")
     temp_out   = float(temp_out_raw) if temp_out_raw is not None else None
     hour       = datetime.now().hour
@@ -1698,9 +1699,42 @@ def _hp_zone_decision(sensors: dict, zone: dict, zone_idx: int) -> dict:
     target     = None
     reason     = ""
 
+    # "Controlled" heat/cool devices (heat pumps etc. with their own internal
+    # schedule/program) get: a 4th "emergency" safety tier, symmetric cool-side
+    # tiers for summer, a comfort↔savings weight that tunes the "otherwise
+    # inactive/minimum" tier, and — critically — writes go to a real override
+    # entity (e.g. a quick-veto register) instead of a plain setpoint that the
+    # device's own firmware may silently ignore outside manual mode. None of
+    # this activates for a plain zone (controlled_hvac unset/false): behaviour
+    # is byte-for-byte what it was before this was added.
+    controlled = bool(zone.get("controlled_hvac", False))
+    weight     = max(0.0, min(100.0, float(zone.get("comfort_savings_weight", 50.0))))
+    t_emergency      = float(zone.get("temp_emergency", 16.0))
+    t_comfort_cool    = float(zone.get("temp_comfort_cool", 25.0))
+    t_surplus_cool    = float(zone.get("temp_surplus_cool", 22.0))
+    t_min_cool        = float(zone.get("temp_min_cool", 27.0))
+    t_emergency_cool  = float(zone.get("temp_emergency_cool", 28.0))
+    override_heat = zone.get("override_heat") or ""
+    override_cool = zone.get("override_cool") or override_heat
+    entity_heat = (override_heat if (controlled and override_heat) else
+                   (zone.get("temp_heat") or _wiz("hvac_temp_heat", "number_hvac_heat", "")))
+    entity_cool = (override_cool if (controlled and override_cool) else
+                   (zone.get("temp_cool") or _wiz("hvac_temp_cool", "number_hvac_cool", "")))
+
+    # Emergency gate (controlled devices only): no real indoor reading for
+    # this zone (not even the global `temp_indoor` fallback) → don't guess,
+    # fall back to the safe tier regardless of schedule/surplus.
+    if controlled and sensor_key not in sensors and "temp_indoor" not in sensors:
+        entity = entity_cool if summer else entity_heat
+        target = t_emergency_cool if summer else t_emergency
+        return {"entity": entity, "climate": zone.get("climate") or None,
+                "target": round(target, 1), "skip": False,
+                "reason": f"Emergency ({zone_name} sensor offline, no fallback)",
+                "zone": zone_name, "sched_mode": sched_mode,
+                "temp_indoor": None, "season": "summer" if summer else "winter"}
+
     if summer:
-        entity = (zone.get("temp_cool") or
-                  _wiz("hvac_temp_cool", "number_hvac_cool", ""))
+        entity = entity_cool
         # Radiant-cooling regime: the floor stores cold poorly compared to a
         # split AC, so running it overnight/valley wastes energy. Default is
         # NOT to act unless (a) we have a clear solar surplus, or (b) the
@@ -1733,7 +1767,7 @@ def _hp_zone_decision(sensors: dict, zone: dict, zone_idx: int) -> dict:
             log.info(f"  [COOLING-GATE] {reason}")
             _maybe_notify_open_windows(temp_in, temp_out, zone_name)
         elif temp_in > override_c:
-            target = max(16.0, t_comfort - 2)
+            target = t_comfort_cool if controlled else max(16.0, t_comfort - 2)
             reason = f"Thermal override ({temp_in:.1f}°C > {override_c:.1f}°C) [{zone_name}]"
         elif (free_power or sched_mode == "surplus") and outdoor_cool_enough:
             skip = True
@@ -1748,18 +1782,28 @@ def _hp_zone_decision(sensors: dict, zone: dict, zone_idx: int) -> dict:
                       f"will free-cool tonight [{zone_name}]")
             log.info(f"  [COOLING-GATE] {reason}")
         elif free_power or sched_mode == "surplus":
-            target = max(16.0, t_comfort - 3)
+            target = t_surplus_cool if controlled else max(16.0, t_comfort - 3)
             reason = f"Surplus cooling [{zone_name}]"
+        elif controlled:
+            # Weight blends the "otherwise inactive" tier between pure eco
+            # (weight=0 → t_min_cool, laziest/warmest) and comfort (weight=100
+            # → t_comfort_cool) instead of fully skipping, same as the winter
+            # minimum tier below. Free-cooling gates above still take priority
+            # — this only replaces the plain "no surplus, below override" case.
+            target = round(t_min_cool - (weight / 100.0) * (t_min_cool - t_comfort_cool), 1)
+            reason = f"Minimum cooling (weight={weight:.0f}) [{zone_name}]"
         else:
             skip = True
             reason = f"Inactive (no surplus, {temp_in:.1f}°C ≤ {override_c:.1f}°C) [{zone_name}]"
     else:
-        entity = (zone.get("temp_heat") or
-                  _wiz("hvac_temp_heat", "number_hvac_heat", ""))
+        entity = entity_heat
         if free_power or sched_mode == "surplus":
             target, reason = t_surplus, f"Surplus heating [{zone_name}]"
         elif sched_mode == "comfort":
             target, reason = t_comfort, f"Comfort heating ({temp_in:.1f}°C) [{zone_name}]"
+        elif controlled:
+            target = round(t_min + (weight / 100.0) * (t_comfort - t_min), 1)
+            reason = f"Minimum heating (weight={weight:.0f}) [{zone_name}]"
         else:
             target, reason = t_min, f"Minimum heating [{zone_name}]"
 
@@ -6008,7 +6052,7 @@ function _wizRenderSingleDevice(hw, container) {
             <div class="wiz-field"><label>Comfort °C</label><input type="number" value="${z.temp_comfort||21}" step="0.5" oninput="wizCfg.hvac_zones[${zi}].temp_comfort=+this.value"></div>
             <div class="wiz-field"><label>Surplus °C</label><input type="number" value="${z.temp_surplus||23}" step="0.5" oninput="wizCfg.hvac_zones[${zi}].temp_surplus=+this.value"></div>
             <div class="wiz-field"><label>Minimum °C</label><input type="number" value="${z.temp_min||18}" step="0.5" oninput="wizCfg.hvac_zones[${zi}].temp_min=+this.value"></div>
-          </div>` : '';
+          </div>${_wizControlledHvacBlock(z,zi)}` : '';
         return `<div class="hvac-zone">
           <div class="hvac-zone-hdr"><span class="hvac-zone-title">🌡️ ${z.name||'Zone '+(zi+1)}</span>${zi>0?`<button class="hvac-zone-del" onclick="wizDelHvacZone(${zi})">Remove</button>`:''}</div>
           <input class="entity-select" value="${z.name||''}" placeholder="Zone name" style="margin-bottom:.4rem" oninput="wizCfg.hvac_zones[${zi}].name=this.value">
@@ -6092,7 +6136,7 @@ function wizRenderLoadsEntities() {
           <div class="wiz-field"><label>Comfort °C</label><input type="number" value="${z.temp_comfort||21}" step="0.5" oninput="wizCfg.hvac_zones[${zi}].temp_comfort=+this.value"></div>
           <div class="wiz-field"><label>Surplus °C</label><input type="number" value="${z.temp_surplus||23}" step="0.5" oninput="wizCfg.hvac_zones[${zi}].temp_surplus=+this.value"></div>
           <div class="wiz-field"><label>Minimum °C</label><input type="number" value="${z.temp_min||18}" step="0.5" oninput="wizCfg.hvac_zones[${zi}].temp_min=+this.value"></div>
-        </div>` : '';
+        </div>${_wizControlledHvacBlock(z,zi)}` : '';
       return `<div class="hvac-zone">
         <div class="hvac-zone-hdr">
           <span class="hvac-zone-title">🌡️ ${z.name||'Zone '+(zi+1)}</span>
@@ -6259,6 +6303,50 @@ function _wizLoadsRenderCands() {
      ['temp_indoor',`wiz-hvac-ts-${i}`,`wiz-hvac-ts-${i}-cands`],
     ].forEach(([r,ip,cp])=>{ if(document.getElementById(ip)) _wizRenderCands(r,ip,cp,null,null); });
   });
+}
+
+// ── Controlled heat/cool device (heat pump with its own schedule/quick-veto) ──
+// Only shown once the user flags a zone as "controlled" — a plain thermostat
+// zone never needs the emergency tier, the symmetric cool-side tiers, or the
+// comfort/savings weight, and keeps writing straight to temp_heat/temp_cool.
+function _wizControlledHvacBlock(z, zi) {
+  const disp = z.controlled_hvac ? '' : 'none';
+  return `
+    <label style="display:flex;align-items:center;gap:.4rem;margin-top:.5rem;font-size:.78rem;color:var(--m)">
+      <input type="checkbox" ${z.controlled_hvac?'checked':''} onchange="wizToggleControlledHvac(${zi},this.checked)" style="accent-color:var(--a)">
+      Controlled heat/cool device (heat pump with its own schedule/quick-veto, e.g. Vaillant Genia Air)
+    </label>
+    <div id="wiz-hvac-controlled-${zi}" style="display:${disp}">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.4rem;margin-top:.4rem">
+        <div class="entity-picker"><div class="entity-picker-label">Heat override entity (quick veto)</div>
+          <input class="entity-select" value="${z.override_heat||''}" placeholder="number.genia_air_quick_veto_setpoint" oninput="wizCfg.hvac_zones[${zi}].override_heat=this.value"></div>
+        <div class="entity-picker"><div class="entity-picker-label">Cool override entity (optional — defaults to heat's)</div>
+          <input class="entity-select" value="${z.override_cool||''}" placeholder="" oninput="wizCfg.hvac_zones[${zi}].override_cool=this.value"></div>
+      </div>
+      <div style="font-size:.65rem;color:var(--m);margin-top:.5rem">Heat tiers °C</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:.4rem">
+        <div class="wiz-field"><label>Comfort</label><input type="number" value="${z.temp_comfort??21}" step="0.5" oninput="wizCfg.hvac_zones[${zi}].temp_comfort=+this.value"></div>
+        <div class="wiz-field"><label>Surplus</label><input type="number" value="${z.temp_surplus??23}" step="0.5" oninput="wizCfg.hvac_zones[${zi}].temp_surplus=+this.value"></div>
+        <div class="wiz-field"><label>Savings</label><input type="number" value="${z.temp_min??18}" step="0.5" oninput="wizCfg.hvac_zones[${zi}].temp_min=+this.value"></div>
+        <div class="wiz-field"><label>Emergency</label><input type="number" value="${z.temp_emergency??16}" step="0.5" oninput="wizCfg.hvac_zones[${zi}].temp_emergency=+this.value"></div>
+      </div>
+      <div style="font-size:.65rem;color:var(--m);margin-top:.5rem">Cool tiers °C (summer)</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:.4rem">
+        <div class="wiz-field"><label>Comfort</label><input type="number" value="${z.temp_comfort_cool??25}" step="0.5" oninput="wizCfg.hvac_zones[${zi}].temp_comfort_cool=+this.value"></div>
+        <div class="wiz-field"><label>Surplus</label><input type="number" value="${z.temp_surplus_cool??22}" step="0.5" oninput="wizCfg.hvac_zones[${zi}].temp_surplus_cool=+this.value"></div>
+        <div class="wiz-field"><label>Savings</label><input type="number" value="${z.temp_min_cool??27}" step="0.5" oninput="wizCfg.hvac_zones[${zi}].temp_min_cool=+this.value"></div>
+        <div class="wiz-field"><label>Emergency</label><input type="number" value="${z.temp_emergency_cool??28}" step="0.5" oninput="wizCfg.hvac_zones[${zi}].temp_emergency_cool=+this.value"></div>
+      </div>
+      <div style="margin-top:.5rem">
+        <label style="font-size:.72rem;color:var(--m)">🌡️ Comfort ↔ 💰 Savings weight: <span class="range-val" id="wiz-hvac-weight-val-${zi}">${z.comfort_savings_weight??50}</span></label>
+        <input type="range" min="0" max="100" value="${z.comfort_savings_weight??50}" oninput="wizCfg.hvac_zones[${zi}].comfort_savings_weight=+this.value;document.getElementById('wiz-hvac-weight-val-${zi}').textContent=this.value">
+      </div>
+    </div>`;
+}
+function wizToggleControlledHvac(zi, checked) {
+  wizCfg.hvac_zones[zi].controlled_hvac = !!checked;
+  const el = document.getElementById('wiz-hvac-controlled-'+zi);
+  if (el) el.style.display = checked ? '' : 'none';
 }
 
 // ── HVAC zone management ───────────────────────────────────────────────────────
