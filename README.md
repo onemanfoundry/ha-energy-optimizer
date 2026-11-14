@@ -597,6 +597,33 @@ All data lives in `/data/` inside the add-on container (persists across restarts
 
 ## Changelog
 
+### v5.0.23 — Mode-select assertion for heat pumps that ignore the override setpoint in "auto"
+
+v5.0.22 assumed writing a zone's `override_heat`/`override_cool` entity
+(e.g. a quick-veto register) was enough to take over from the device's
+own schedule. Confirmed live on a Vaillant Genia Air (2026-11-14) that
+this isn't always true: with the device's own operation-mode select on
+`auto`, the override write lands on the bus successfully but the real
+target temperature never follows it — the device's day/night schedule
+wins regardless. Switching the same select to `day` (manual) made the
+override a working override: 4 live confirmations in a row, matching the
+physical panel exactly.
+
+Two new optional per-zone fields, shown alongside the existing override
+entities in the "Controlled heat/cool device" block:
+
+- **`override_mode_entity`** — a `select.*` entity to flip out of its
+  "auto"/schedule option before writing the override setpoint. Leave
+  blank for a device whose override already works without this (no
+  behaviour change, matches v5.0.22).
+- **`override_mode_option`** — which option to select (default `"day"`).
+
+When set, the addon asserts the mode select once per cycle, right before
+the first `override_heat`/`override_cool` write of that cycle (dedup'd
+if several zones share the same select) — logged as its own `heat_pump_mode`
+Activity entry so the override attempt and the mode-flip are both
+traceable instead of one silent prerequisite for the other.
+
 ### v5.0.22 — Controlled heat/cool devices: emergency tier + comfort/savings weight + real override writes
 
 Zones with a plain thermostat-style setpoint were already covered by the

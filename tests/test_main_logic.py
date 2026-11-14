@@ -367,6 +367,61 @@ def test_hp_zone_decision_controlled_falls_back_without_override_entity(mod, mon
     assert d["entity"] == "number.heat_setpoint"
 
 
+# ── _hp_zone_decision: override_mode_entity (2026-11-14) ────────────────────
+# Some heat pumps (confirmed live on a Vaillant Genia Air) silently ignore
+# any override setpoint write while their own mode select stays on "auto" —
+# `override_mode_entity`/`override_mode_option` let the apply loop flip that
+# select before writing the override, instead of pretending a plain number
+# write is always enough.
+
+def test_hp_zone_decision_mode_entity_present_when_controlled_and_configured(mod, monkeypatch):
+    zone, sensors = _hvac_zone(mod, monkeypatch, summer=False, controlled_hvac=True,
+                                override_heat="number.genia_air_manual_setpoint",
+                                override_mode_entity="select.genia_air_heating_operation_mode")
+    d = mod._hp_zone_decision(sensors, zone, 0)
+    assert d["mode_entity"] == "select.genia_air_heating_operation_mode"
+    assert d["mode_option"] == "day"  # default
+
+
+def test_hp_zone_decision_mode_option_can_be_customized(mod, monkeypatch):
+    zone, sensors = _hvac_zone(mod, monkeypatch, summer=False, controlled_hvac=True,
+                                override_mode_entity="select.foo",
+                                override_mode_option="manual")
+    d = mod._hp_zone_decision(sensors, zone, 0)
+    assert d["mode_option"] == "manual"
+
+
+def test_hp_zone_decision_mode_entity_absent_when_not_controlled(mod, monkeypatch):
+    """A zone with controlled_hvac unset must never try to flip a mode select,
+    even if override_mode_entity is left over in its config from toggling the
+    checkbox off — matches the legacy-unaffected guarantee."""
+    zone, sensors = _hvac_zone(mod, monkeypatch, summer=False,
+                                override_mode_entity="select.genia_air_heating_operation_mode")
+    d = mod._hp_zone_decision(sensors, zone, 0)
+    assert d["mode_entity"] == ""
+
+
+def test_hp_zone_decision_mode_entity_absent_when_not_configured(mod, monkeypatch):
+    """controlled_hvac=True but no override_mode_entity configured → "" (the
+    heat pump doesn't need this quirk, e.g. one whose override already works
+    without leaving 'auto')."""
+    zone, sensors = _hvac_zone(mod, monkeypatch, summer=False, controlled_hvac=True)
+    d = mod._hp_zone_decision(sensors, zone, 0)
+    assert d["mode_entity"] == ""
+
+
+def test_hp_zone_decision_mode_entity_present_on_emergency_branch(mod, monkeypatch):
+    """The emergency early-return must also carry mode_entity/mode_option so
+    the apply loop can still flip the mode select before writing the
+    emergency target."""
+    zone, sensors = _hvac_zone(mod, monkeypatch, summer=False, controlled_hvac=True,
+                                override_mode_entity="select.genia_air_heating_operation_mode")
+    sensors = {"battery_soc": 50.0, "battery_power": 0.0}  # no temp_zone_0, no temp_indoor
+    d = mod._hp_zone_decision(sensors, zone, 0)
+    assert d["reason"].startswith("Emergency")
+    assert d["mode_entity"] == "select.genia_air_heating_operation_mode"
+
+
 def test_hp_zone_decision_comfort_and_surplus_tiers_ignore_weight(mod, monkeypatch):
     # Weight only tunes the "otherwise min/inactive" tier — comfort/surplus
     # stay exactly at their configured values regardless of the dial.

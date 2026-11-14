@@ -26,7 +26,7 @@ from flask import Flask, jsonify, request
 
 # ── ML feature version — increment when feature engineering changes ───────────
 MODEL_FEATURE_VER = 3   # v3: dynamic features from wizard (temp_outdoor, solar, grid, submeters)
-ADD_ON_VERSION = "5.0.22"  # SOURCE OF TRUTH — bump here AND in config.yaml together
+ADD_ON_VERSION = "5.0.23"  # SOURCE OF TRUTH — bump here AND in config.yaml together
 
 # ── Location (solar elevation formula) ───────────────────────────────────────
 HOME_LAT = 40.67   # Guadarrama, Madrid — °N (fallback; wizard overrides)
@@ -1720,6 +1720,15 @@ def _hp_zone_decision(sensors: dict, zone: dict, zone_idx: int) -> dict:
                    (zone.get("temp_heat") or _wiz("hvac_temp_heat", "number_hvac_heat", "")))
     entity_cool = (override_cool if (controlled and override_cool) else
                    (zone.get("temp_cool") or _wiz("hvac_temp_cool", "number_hvac_cool", "")))
+    # Some heat pumps (confirmed live on a Vaillant Genia Air, 2026-11-14)
+    # silently ignore any manual/quick-veto setpoint write while their own
+    # internal operation-mode select is on "auto" — the device just keeps
+    # following its own day/night schedule. Writing `override_heat`/`_cool`
+    # alone is a no-op on those units; the select below must also be flipped
+    # out of "auto" (e.g. to "day") for the override to take effect. Zones
+    # that don't need this (no mode quirk) simply leave it unset.
+    override_mode_entity = zone.get("override_mode_entity") or "" if controlled else ""
+    override_mode_option = zone.get("override_mode_option") or "day"
 
     # Emergency gate (controlled devices only): no real indoor reading for
     # this zone (not even the global `temp_indoor` fallback) → don't guess,
@@ -1731,7 +1740,8 @@ def _hp_zone_decision(sensors: dict, zone: dict, zone_idx: int) -> dict:
                 "target": round(target, 1), "skip": False,
                 "reason": f"Emergency ({zone_name} sensor offline, no fallback)",
                 "zone": zone_name, "sched_mode": sched_mode,
-                "temp_indoor": None, "season": "summer" if summer else "winter"}
+                "temp_indoor": None, "season": "summer" if summer else "winter",
+                "mode_entity": override_mode_entity, "mode_option": override_mode_option}
 
     if summer:
         entity = entity_cool
@@ -1812,7 +1822,8 @@ def _hp_zone_decision(sensors: dict, zone: dict, zone_idx: int) -> dict:
             "skip": skip,
             "reason": reason, "zone": zone_name,
             "sched_mode": sched_mode, "temp_indoor": round(temp_in, 1),
-            "season": "summer" if summer else "winter"}
+            "season": "summer" if summer else "winter",
+            "mode_entity": override_mode_entity, "mode_option": override_mode_option}
 
 def _hp_legacy_decision(sensors: dict) -> dict:
     soc        = sensors["battery_soc"]
@@ -2889,6 +2900,40 @@ def _run_cycle_inner() -> dict:
     # per actual entity per cycle. Skipping the duplicates avoids spamming
     # the bus and triple-logging the same reset.
     hvac_written_entities: set[str] = set()
+    # Mode selects (e.g. select.genia_air_heating_operation_mode → "day")
+    # that have already been asserted this cycle, so a shared select isn't
+    # written once per zone when several zones override the same device.
+    hvac_mode_asserted: set[str] = set()
+
+    def _assert_override_mode(hp: dict) -> None:
+        mode_entity = hp.get("mode_entity")
+        if not mode_entity or mode_entity in hvac_mode_asserted:
+            return
+        mode_option = hp.get("mode_option", "day")
+        mode_ok = ha_service("select", "select_option",
+                              {"entity_id": mode_entity, "option": mode_option})
+        hvac_mode_asserted.add(mode_entity)
+        decision["actions"].append({
+            "type": "heat_pump_mode", "entity": mode_entity,
+            "zone": hp.get("zone"), "value": mode_option,
+            "reason": f"Take {hp.get('zone')} out of its own schedule so the "
+                      f"override setpoint is actually honored",
+            "ok": mode_ok,
+            "explanation": _explain(
+                what=f"Set {mode_entity} to '{mode_option}'",
+                why=("This heat pump ignores manual/override setpoint writes "
+                     "while its own operation-mode select is on 'auto' — "
+                     "confirmed live on 2026-11-14 (Vaillant Genia Air: "
+                     "writes landed on the bus but the device's real target "
+                     "temperature never moved). Flipping it out of 'auto' "
+                     "is required for the override write below to have any "
+                     "effect."),
+                inputs=[{"label": "Mode entity", "value": mode_entity},
+                        {"label": "Target option", "value": mode_option}],
+                formula="controlled_hvac AND override_mode_entity set → assert once per cycle",
+            ),
+        })
+
     for hp in hp_zones:
         zone_tag = f"/{hp['zone']}" if hp.get("zone", "default") != "default" else ""
         # Conservative summer regime can decide to NOT touch the setpoint at all
@@ -2923,6 +2968,7 @@ def _run_cycle_inner() -> dict:
                 # the duplicate write (the value is the same anyway).
                 reset_reason = None
             if reset_reason:
+                _assert_override_mode(hp)
                 ok_reset = ha_set_number(hp["entity"], off_setpoint)
                 hvac_written_entities.add(hp["entity"])
                 log.info(f"  [HP{zone_tag}] {reset_reason} → reset "
@@ -2972,6 +3018,8 @@ def _run_cycle_inner() -> dict:
             # repeated the write 3× when zones shared a global fallback.
             ok = True
         else:
+            if hp["entity"]:
+                _assert_override_mode(hp)
             ok = ha_set_number(hp["entity"], hp["target"]) if hp["entity"] else False
             if hp["entity"] and ok:
                 hvac_written_entities.add(hp["entity"])
@@ -6318,10 +6366,16 @@ function _wizControlledHvacBlock(z, zi) {
     </label>
     <div id="wiz-hvac-controlled-${zi}" style="display:${disp}">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:.4rem;margin-top:.4rem">
-        <div class="entity-picker"><div class="entity-picker-label">Heat override entity (quick veto)</div>
-          <input class="entity-select" value="${z.override_heat||''}" placeholder="number.genia_air_quick_veto_setpoint" oninput="wizCfg.hvac_zones[${zi}].override_heat=this.value"></div>
+        <div class="entity-picker"><div class="entity-picker-label">Heat override entity (manual setpoint)</div>
+          <input class="entity-select" value="${z.override_heat||''}" placeholder="number.genia_air_manual_setpoint" oninput="wizCfg.hvac_zones[${zi}].override_heat=this.value"></div>
         <div class="entity-picker"><div class="entity-picker-label">Cool override entity (optional — defaults to heat's)</div>
           <input class="entity-select" value="${z.override_cool||''}" placeholder="" oninput="wizCfg.hvac_zones[${zi}].override_cool=this.value"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.4rem;margin-top:.4rem">
+        <div class="entity-picker"><div class="entity-picker-label">Mode select to leave "auto" (optional — only if the override alone is ignored)</div>
+          <input class="entity-select" value="${z.override_mode_entity||''}" placeholder="select.genia_air_heating_operation_mode" oninput="wizCfg.hvac_zones[${zi}].override_mode_entity=this.value"></div>
+        <div class="entity-picker"><div class="entity-picker-label">Option to select (default "day")</div>
+          <input class="entity-select" value="${z.override_mode_option||'day'}" placeholder="day" oninput="wizCfg.hvac_zones[${zi}].override_mode_option=this.value"></div>
       </div>
       <div style="font-size:.65rem;color:var(--m);margin-top:.5rem">Heat tiers °C</div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:.4rem">
