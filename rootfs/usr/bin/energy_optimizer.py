@@ -26,7 +26,7 @@ from flask import Flask, jsonify, request
 
 # ── ML feature version — increment when feature engineering changes ───────────
 MODEL_FEATURE_VER = 3   # v3: dynamic features from wizard (temp_outdoor, solar, grid, submeters)
-ADD_ON_VERSION = "5.0.23"  # SOURCE OF TRUTH — bump here AND in config.yaml together
+ADD_ON_VERSION = "5.0.24"  # SOURCE OF TRUTH — bump here AND in config.yaml together
 
 # ── Location (solar elevation formula) ───────────────────────────────────────
 HOME_LAT = 40.67   # Guadarrama, Madrid — °N (fallback; wizard overrides)
@@ -1708,7 +1708,13 @@ def _hp_zone_decision(sensors: dict, zone: dict, zone_idx: int) -> dict:
     # this activates for a plain zone (controlled_hvac unset/false): behaviour
     # is byte-for-byte what it was before this was added.
     controlled = bool(zone.get("controlled_hvac", False))
-    weight     = max(0.0, min(100.0, float(zone.get("comfort_savings_weight", 50.0))))
+    # The comfort/savings weight is a global Tweaks-tab dial (cfg()), not a
+    # per-zone Wizard field — the Wizard configures *what* sensors/entities a
+    # zone has, Tweaks controls *how* the engine behaves. A zone dict can
+    # still carry its own `comfort_savings_weight` as a power-user escape
+    # hatch (no UI for it), which wins over the global dial if present.
+    weight = max(0.0, min(100.0, float(
+        zone.get("comfort_savings_weight", cfg("hvac_comfort_savings_weight", 50.0)))))
     t_emergency      = float(zone.get("temp_emergency", 16.0))
     t_comfort_cool    = float(zone.get("temp_comfort_cool", 25.0))
     t_surplus_cool    = float(zone.get("temp_surplus_cool", 22.0))
@@ -4069,6 +4075,19 @@ th{color:var(--m);font-weight:500}
     </div>
   </div>
   <div class="setup-section">
+    <h3>🌡️ Heat pump comfort ↔ savings</h3>
+    <div style="font-size:.72rem;color:var(--m);margin-bottom:.6rem">
+      For zones flagged "Controlled heat/cool device" in the Wizard: blends
+      the "no surplus / scheduled minimum" target between that zone's
+      Savings and Comfort temperatures. 0 = pure savings, 100 = pure comfort.
+      Has no effect on plain thermostat zones.
+    </div>
+    <div class="range-row">
+      <div class="range-header"><span class="range-name">Comfort ↔ Savings weight</span><span class="range-val" id="val-hvac-weight">50</span></div>
+      <input type="range" id="rng-hvac-weight" min="0" max="100" value="50" oninput="document.getElementById('val-hvac-weight').textContent=this.value;markDirty()">
+    </div>
+  </div>
+  <div class="setup-section">
     <h3>⏱ Automation</h3>
     <div class="range-row">
       <div class="range-header"><span class="range-name">Decision interval</span><span class="range-val" id="val-interval">15 min</span></div>
@@ -4694,6 +4713,7 @@ async function loadSetup(){
     set('rng-storm','val-storm',s.battery_storm_threshold??80,'%');
     set('rng-interval','val-interval',s.decision_interval_minutes??15,' min');
     set('rng-batt-cap','val-batt-cap',s.battery_capacity_kwh??10,' kWh');
+    set('rng-hvac-weight','val-hvac-weight',s.hvac_comfort_savings_weight??50,'');
     setHealthMode(s.battery_health_mode||'bill_reducer');
     _dirty=false; document.getElementById('setup-hint').textContent='';
   } catch(e){ notify('Error loading setup','err'); }
@@ -4716,6 +4736,7 @@ async function saveSetup(){
         battery_storm_threshold:         parseInt(document.getElementById('rng-storm').value),
         decision_interval_minutes:       parseInt(document.getElementById('rng-interval').value),
         battery_capacity_kwh:            parseFloat(document.getElementById('rng-batt-cap').value),
+        hvac_comfort_savings_weight:     parseFloat(document.getElementById('rng-hvac-weight').value),
         battery_health_mode:             _healthMode,
       })
     }).then(r=>r.json());
@@ -6391,9 +6412,9 @@ function _wizControlledHvacBlock(z, zi) {
         <div class="wiz-field"><label>Savings</label><input type="number" value="${z.temp_min_cool??27}" step="0.5" oninput="wizCfg.hvac_zones[${zi}].temp_min_cool=+this.value"></div>
         <div class="wiz-field"><label>Emergency</label><input type="number" value="${z.temp_emergency_cool??28}" step="0.5" oninput="wizCfg.hvac_zones[${zi}].temp_emergency_cool=+this.value"></div>
       </div>
-      <div style="margin-top:.5rem">
-        <label style="font-size:.72rem;color:var(--m)">🌡️ Comfort ↔ 💰 Savings weight: <span class="range-val" id="wiz-hvac-weight-val-${zi}">${z.comfort_savings_weight??50}</span></label>
-        <input type="range" min="0" max="100" value="${z.comfort_savings_weight??50}" oninput="wizCfg.hvac_zones[${zi}].comfort_savings_weight=+this.value;document.getElementById('wiz-hvac-weight-val-${zi}').textContent=this.value">
+      <div style="font-size:.68rem;color:var(--m);margin-top:.6rem">
+        🌡️ Comfort ↔ 💰 Savings weight is a global dial — set it once in
+        <b>Tweaks</b>, it applies to every controlled zone.
       </div>
     </div>`;
 }
@@ -6735,6 +6756,7 @@ def api_setup_post():
         "battery_storm_threshold":        lambda v: clamp(int(v), 50, 100),
         "decision_interval_minutes":      lambda v: clamp(int(v), 5, 60),
         "battery_capacity_kwh":           lambda v: clamp(float(v), 2.0, 30.0),
+        "hvac_comfort_savings_weight":    lambda v: clamp(float(v), 0.0, 100.0),
         "battery_health_mode":            lambda v: str(v) if str(v) in ("bill_reducer","optimized","battery_guard") else "bill_reducer",
         "influxdb_url":                   lambda v: str(v)[:200].strip(),
         "influxdb_db":                    lambda v: str(v)[:100].strip(),

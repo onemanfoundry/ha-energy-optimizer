@@ -346,6 +346,30 @@ def test_hp_zone_decision_controlled_weight_hundred_is_pure_comfort(mod, monkeyp
     assert d["target"] == 22.0
 
 
+def test_hp_zone_decision_weight_reads_global_tweaks_dial_by_default(mod, monkeypatch):
+    """comfort_savings_weight moved from a per-zone Wizard field to a global
+    Tweaks-tab dial (2026-11-14): a zone that doesn't set its own weight
+    must pick up cfg('hvac_comfort_savings_weight'), not a hardcoded 50."""
+    zone, sensors = _hvac_zone(mod, monkeypatch, summer=False, controlled_hvac=True,
+                                temp_comfort=22.0, temp_min=18.0)
+    monkeypatch.setattr(mod, "cfg", lambda key, default=None:
+                         0.0 if key == "hvac_comfort_savings_weight" else default)
+    d = mod._hp_zone_decision(sensors, zone, 0)
+    assert d["target"] == 18.0  # weight=0 from the global dial → pure savings
+
+
+def test_hp_zone_decision_zone_weight_overrides_global_dial(mod, monkeypatch):
+    """An explicit per-zone comfort_savings_weight (power-user escape hatch,
+    no UI) still wins over the global Tweaks dial."""
+    zone, sensors = _hvac_zone(mod, monkeypatch, summer=False, controlled_hvac=True,
+                                temp_comfort=22.0, temp_min=18.0,
+                                comfort_savings_weight=100)
+    monkeypatch.setattr(mod, "cfg", lambda key, default=None:
+                         0.0 if key == "hvac_comfort_savings_weight" else default)
+    d = mod._hp_zone_decision(sensors, zone, 0)
+    assert d["target"] == 22.0  # zone's own 100, not the global dial's 0
+
+
 def test_hp_zone_decision_controlled_weight_blends_linearly(mod, monkeypatch):
     zone, sensors = _hvac_zone(mod, monkeypatch, summer=False, controlled_hvac=True,
                                 temp_comfort=22.0, temp_min=18.0,

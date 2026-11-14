@@ -597,6 +597,18 @@ All data lives in `/data/` inside the add-on container (persists across restarts
 
 ## Changelog
 
+### v5.0.24 — Comfort ↔ Savings weight moved to Tweaks (global dial, not a per-zone Wizard field)
+
+The Wizard configures *what* sensors/entities/thresholds a zone has;
+Tweaks controls *how* the engine behaves day to day. The comfort/savings
+weight slider was living in the wrong place — a per-zone Wizard field —
+since v5.0.22. Moved to its own "🌡️ Heat pump comfort ↔ savings" section
+in Tweaks: one dial, applies to every zone flagged "Controlled heat/cool
+device". A zone can still carry its own `comfort_savings_weight` in its
+stored config as a power-user escape hatch (no UI for it) — it wins over
+the global dial if present, so nobody's existing per-zone value silently
+changed behaviour on upgrade.
+
 ### v5.0.23 — Mode-select assertion for heat pumps that ignore the override setpoint in "auto"
 
 v5.0.22 assumed writing a zone's `override_heat`/`override_cool` entity
