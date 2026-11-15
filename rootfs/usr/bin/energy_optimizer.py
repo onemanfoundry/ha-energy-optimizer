@@ -26,7 +26,7 @@ from flask import Flask, jsonify, request
 
 # ── ML feature version — increment when feature engineering changes ───────────
 MODEL_FEATURE_VER = 3   # v3: dynamic features from wizard (temp_outdoor, solar, grid, submeters)
-ADD_ON_VERSION = "5.0.24"  # SOURCE OF TRUTH — bump here AND in config.yaml together
+ADD_ON_VERSION = "5.0.25"  # SOURCE OF TRUTH — bump here AND in config.yaml together
 
 # ── Location (solar elevation formula) ───────────────────────────────────────
 HOME_LAT = 40.67   # Guadarrama, Madrid — °N (fallback; wizard overrides)
@@ -4075,7 +4075,7 @@ th{color:var(--m);font-weight:500}
     </div>
   </div>
   <div class="setup-section">
-    <h3>🌡️ Heat pump comfort ↔ savings</h3>
+    <h3>🌡️ Heat pump savings ↔ comfort</h3>
     <div style="font-size:.72rem;color:var(--m);margin-bottom:.6rem">
       For zones flagged "Controlled heat/cool device" in the Wizard: blends
       the "no surplus / scheduled minimum" target between that zone's
@@ -4083,7 +4083,7 @@ th{color:var(--m);font-weight:500}
       Has no effect on plain thermostat zones.
     </div>
     <div class="range-row">
-      <div class="range-header"><span class="range-name">Comfort ↔ Savings weight</span><span class="range-val" id="val-hvac-weight">50</span></div>
+      <div class="range-header"><span class="range-name">Savings ↔ Comfort weight</span><span class="range-val" id="val-hvac-weight">50</span></div>
       <input type="range" id="rng-hvac-weight" min="0" max="100" value="50" oninput="document.getElementById('val-hvac-weight').textContent=this.value;markDirty()">
     </div>
   </div>

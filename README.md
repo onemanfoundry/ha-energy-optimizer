@@ -597,6 +597,15 @@ All data lives in `/data/` inside the add-on container (persists across restarts
 
 ## Changelog
 
+### v5.0.25 — Fixed inverted slider legend in Tweaks ("Savings ↔ Comfort")
+
+The v5.0.24 Tweaks slider was labelled "Comfort ↔ Savings weight" with 0 on
+the left reading as pure savings and 100 on the right as pure comfort —
+backwards from the label order, even though the underlying logic (and the
+helper text under it) was correct. Relabelled the section and the slider
+header to "Savings ↔ Comfort" so low = savings, high = comfort, matching
+the slider's actual left-to-right behaviour. No logic change.
+
 ### v5.0.24 — Comfort ↔ Savings weight moved to Tweaks (global dial, not a per-zone Wizard field)
 
 The Wizard configures *what* sensors/entities/thresholds a zone has;
